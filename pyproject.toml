@@ -1,0 +1,132 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=61",
+  "setuptools-scm",
+]
+
+[project]
+name = "walacor-sdk"
+description = "Python SDK for Walacor"
+readme = "README.md"
+keywords = [
+  "data-transformations",
+  "lineage",
+  "provenance",
+  "walacor",
+]
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Garo Kechichian", email = "garo.keshish@gmail.com" },
+]
+requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dynamic = [
+  "version",
+]
+dependencies = [
+  "requests>=2.20",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=6",
+]
+dev = [
+  "pre-commit",
+  "tox"
+]
+[tool.setuptools_scm]
+
+[project.urls]
+Documentation = "https://apidoc.walacor.com"
+Homepage = "https://www.walacor.com"
+
+[tool.ruff]
+src = [ "src/walacor_sdk" ]
+
+[tool.ruff.lint]
+extend-select = [
+  "ASYNC",  # flake8-async
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "ISC",    # flake8-implicit-str-concat
+  "PGH",    # pygrep-hooks
+  "RUF100", # unused noqa (yesqa)
+  "T201",   # print
+  "UP",     # pyupgrade
+  "W",      # pycodestyle warnings
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["walacor_sdk"]
+combine-as-imports = true
+lines-between-types = 1
+
+[tool.isort]
+profile = "black"
+known_first_party = ["walacor_sdk"]
+combine_as_imports = true
+lines_between_types = 1
+
+[tool.codespell]
+ignore-words-list = "asend,daa,hel"
+
+[tool.pytest.ini_options]
+addopts = "-rsfE --tb=short --strict-config --strict-markers"
+testpaths = [ "tests" ]
+xfail_strict = true
+filterwarnings = [
+  "error",
+  # Ignore resource warnings due to a CPython/Windows bug (https://bugs.python.org/issue44428)
+  "ignore:unclosed transport <_ProactorSocketTransport.*:ResourceWarning",
+  # Workaround for Python 3.9.7 (see https://bugs.python.org/issue45097)
+  "ignore:The loop argument is deprecated since Python 3\\.8, and scheduled for removal in Python 3\\.10\\.:DeprecationWarning:asyncio",
+]
+markers = [
+  "network: marks tests as requiring Internet access",
+]
+
+[tool.tox]
+env_list = [ "pre-commit", "py311", "py312", "py313" ]
+skip_missing_interpreters = true
+
+[tool.tox.env_run_base]
+depends = ["pre-commit"]
+package = "editable"
+commands = [
+  ["python", "-m", "pytest", { replace = "posargs", extend = true }]
+]
+extras = ["test"]
+
+[tool.tox.env.pypy3]
+commands = [ [ "python", { replace = "posargs", extend = true } ] ]
+
+[tool.tox.env.pre-commit]
+commands = [ [ "pre-commit", "run", "--all-files" ] ]
+depends = [  ]
+allowlist_externals = [ "pre-commit" ]
+package = "skip"
+
+[tool.tox.env.pytest]
+commands = ["pytest", "--pyargs", "walacor_sdk"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+disallow_any_generics = false
+warn_return_any = false
+disallow_untyped_decorators = false
+
+[pyproject-fmt]
+indent = 2
+sort-keys = true
+preserve-order = true
