@@ -38,7 +38,7 @@ cd walacor-sdk
 pip install -e .
 ```
 
-#### From PyPI 
+#### From PyPI
 ```bash
 pip install walacor-sdk
 ```
@@ -60,7 +60,7 @@ auth = WalacorAuth(url="https://example-walacor.com", username="W_username", pas
 
 ```bash
 pip install .[test]
-pytest 
+pytest
 ```
 ---
 
