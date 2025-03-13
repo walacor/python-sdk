@@ -6,7 +6,6 @@ import requests
 from walacor_sdk.w_client import W_Client
 
 
-
 class BaseService(ABC):
     def __init__(self, client: W_Client) -> None:
         self.client: W_Client = client
