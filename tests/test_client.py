@@ -95,7 +95,7 @@ def test_client_request_reauth_on_401():
 
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
 
-        client.token = "expired_token"
+        client._token = "expired_token"
 
         response = client.request("GET", TEST_ENDPOINT)
 

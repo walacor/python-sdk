@@ -3,7 +3,7 @@ from typing import Any
 
 import requests
 
-from walacor_sdk.w_client import W_Client
+from walacor_sdk.base.w_client import W_Client
 
 
 class BaseService(ABC):
