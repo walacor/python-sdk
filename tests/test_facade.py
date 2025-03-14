@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from walacor_sdk.facade import Facade
-from walacor_sdk.w_client import W_Client
+from walacor_sdk.base.facade import Facade
+from walacor_sdk.base.w_client import W_Client
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"

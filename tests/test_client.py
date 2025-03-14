@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from walacor_sdk.w_client import W_Client
+from walacor_sdk.base.w_client import W_Client
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"
