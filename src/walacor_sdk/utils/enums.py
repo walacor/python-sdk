@@ -9,3 +9,10 @@ class FieldTypeEnum(str, Enum):
     DATETIME_EPOCH = "DATETIME(EPOCH)"
     ARRAY = "ARRAY"
     CRON = "CRON"
+
+
+class RequestTypeEnum(str, Enum):
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"

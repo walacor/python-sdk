@@ -4,6 +4,7 @@ from typing import Any
 import requests
 
 from walacor_sdk.base.w_client import W_Client
+from walacor_sdk.utils.enums import RequestTypeEnum
 
 
 class BaseService(ABC):
@@ -22,7 +23,7 @@ class BaseService(ABC):
             raise e
 
     def get(self, endpoint: str, **kwargs: Any) -> dict[str, Any]:
-        return self._request("GET", endpoint, **kwargs)
+        return self._request(RequestTypeEnum.GET, endpoint, **kwargs)
 
     def post(self, endpoint: str, **kwargs: Any) -> dict[str, Any]:
         return self._request("POST", endpoint, **kwargs)

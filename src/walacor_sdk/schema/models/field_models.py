@@ -63,3 +63,11 @@ SchemaType = Annotated[
     | CronField,
     Field(discriminator="Name"),
 ]
+
+
+class AutoGenField(BaseModel):
+    FieldName: str
+    DataType: str
+    Required: bool
+    SystemGenerated: bool
+    MaxLength: int | None
