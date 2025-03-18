@@ -30,8 +30,9 @@ repos:
       - id: mypy
         args: [--strict]
         additional_dependencies:
+          - pydantic
+          - pydantic[mypy]
           - types-requests
-          - types-setuptools
           - tokenize-rt==3.2.0
           - pytest==7.1
           - importlib_metadata

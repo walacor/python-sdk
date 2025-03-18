@@ -69,7 +69,7 @@ def test_client_request_with_authentication():
             "GET",
             f"{BASE_URL}/{TEST_ENDPOINT}",
             headers={
-                "Authorization": "Bearer fake_token",
+                "Authorization": "fake_token",
                 "Content-Type": "application/json",
             },
         )

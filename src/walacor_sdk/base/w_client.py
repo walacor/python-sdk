@@ -40,27 +40,26 @@ class W_Client:
                 f"Authentication failed with status code {response.status_code}"
             )
 
-    def request(self, method: str, endpoint: str, **kwargs: Any) -> requests.Response:
+    def request(self, method: str, endpoint: str, **kwargs: Any) -> Any:
         """Make an API request using the stored token, re-auth if needed."""
         if not self._token:
             self.authenticate()
 
         headers = kwargs.pop("headers", {})
-        headers["Authorization"] = f"Bearer {self._token}"
+        headers["Authorization"] = self._token
         headers["Content-Type"] = "application/json"
 
         response = requests.request(
             method, f"{self._base_url}/{endpoint}", headers=headers, **kwargs
         )
-
+        response
         if response.status_code == 401:
             self.authenticate()
-            headers["Authorization"] = f"Bearer {self._token}"
+            headers["Authorization"] = self._token
             response = requests.request(
                 method, f"{self._base_url}/{endpoint}", headers=headers, **kwargs
             )
-
-        return response
+        return response.json()
 
     @property
     def token(self) -> str | None:
