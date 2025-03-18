@@ -30,6 +30,7 @@ class W_Client:
             f"{self._base_url}/auth/login",
             json={"userName": self._username, "password": self._password},
             headers={"Content-Type": "application/json"},
+            timeout=5,
         )
         if response.status_code == 200:
             self._token = response.json().get("api_token")
@@ -50,16 +51,20 @@ class W_Client:
         headers["Content-Type"] = "application/json"
 
         response = requests.request(
-            method, f"{self._base_url}/{endpoint}", headers=headers, **kwargs
+            method, f"{self._base_url}/{endpoint}", headers=headers, timeout=5, **kwargs
         )
-        response
+
         if response.status_code == 401:
             self.authenticate()
             headers["Authorization"] = self._token
             response = requests.request(
-                method, f"{self._base_url}/{endpoint}", headers=headers, **kwargs
+                method,
+                f"{self._base_url}/{endpoint}",
+                headers=headers,
+                timeout=5,
+                **kwargs,
             )
-        return response.json()
+        return response
 
     @property
     def token(self) -> str | None:
