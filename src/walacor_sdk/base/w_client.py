@@ -41,30 +41,48 @@ class W_Client:
                 f"Authentication failed with status code {response.status_code}"
             )
 
-    def request(self, method: str, endpoint: str, **kwargs: Any) -> Any:
-        """Make an API request using the stored token, re-auth if needed."""
+    def request(
+        self,
+        method: str,
+        endpoint: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Make an API request using stored token and optional custom headers."""
         if not self._token:
             self.authenticate()
 
-        headers = kwargs.pop("headers", {})
-        headers["Authorization"] = self._token
-        headers["Content-Type"] = "application/json"
+        request_headers = self.get_default_headers()
+        if headers:
+            request_headers.update(headers)
 
         response = requests.request(
-            method, f"{self._base_url}/{endpoint}", headers=headers, timeout=5, **kwargs
+            method,
+            f"{self._base_url}/{endpoint}",
+            headers=request_headers,
+            timeout=5,
+            **kwargs,
         )
 
         if response.status_code == 401:
             self.authenticate()
-            headers["Authorization"] = self._token
+            if self._token is not None:
+                request_headers["Authorization"] = self._token
             response = requests.request(
                 method,
                 f"{self._base_url}/{endpoint}",
-                headers=headers,
+                headers=request_headers,
                 timeout=5,
                 **kwargs,
             )
         return response
+
+    def get_default_headers(self) -> dict[str, str]:
+        """Generate default headers with authentication token."""
+        headers = {"Content-Type": "application/json"}
+        if self._token:
+            headers["Authorization"] = self._token
+        return headers
 
     @property
     def token(self) -> str | None:

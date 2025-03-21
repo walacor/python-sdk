@@ -4,12 +4,26 @@ from pydantic import ValidationError
 
 from walacor_sdk.base.base_service import BaseService
 from walacor_sdk.base.w_client import W_Client
-from walacor_sdk.schema.models.field_models import AutoGenField, SchemaType
+from walacor_sdk.schema.models.models import (
+    AutoGenField,
+    IndexEntry,
+    SchemaEntry,
+    SchemaMetadata,
+    SchemaType,
+    SchemaVersionEntry,
+)
+from walacor_sdk.schema.models.schema_request import CreateSchemaRequest
 from walacor_sdk.schema.models.schema_response import (
     AutoGenFieldsResponse,
+    CreateSchemaResponse,
+    IndexesByTableNameResponse,
+    SchemaIndexResponse,
+    SchemaListResponse,
+    SchemaListVersionsResponse,
     SchemaResponse,
+    SchemaVersionsResponse,
 )
-from walacor_sdk.utils.enums import RequestTypeEnum
+from walacor_sdk.utils.enums import SystemEnvelopeType
 
 
 class SchemaService(BaseService):
@@ -17,10 +31,9 @@ class SchemaService(BaseService):
         super().__init__(client)
 
     # region Schema Fields
-    def getDataTypes(self) -> list[SchemaType]:
+    def get_data_types(self) -> list[SchemaType]:
         logging.info("Fetching data types...")
-        response = self.client.request(RequestTypeEnum.GET, "schemas/dataTypes")
-
+        response = self.get("schemas/dataTypes")
         if not response or not response.get("success"):
             logging.error("Failed to fetch data")
             return []
@@ -29,13 +42,12 @@ class SchemaService(BaseService):
             parsed_response = SchemaResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("Schema Validation Error: %c", e)
+            logging.error("Schema Validation Error: %s", e)
             return []
 
-    def getPlatformAutoGenerationFields(self) -> dict[str, AutoGenField]:
+    def get_platform_auto_generation_fields(self) -> dict[str, AutoGenField]:
         logging.info("Fetching platform auto-generation fields...")
-        response = self.client.request(RequestTypeEnum.GET, "schemas/systemFields")
-
+        response = self.get("schemas/systemFields")
         if not response or not response.get("success"):
             logging.error("Failed to fetch platform auto-generation fields")
             return {}
@@ -46,5 +58,113 @@ class SchemaService(BaseService):
         except ValidationError as e:
             logging.error("AutoGenFields Validation Error: %s", e)
             return {}
+
+        # endregion
+
+    # region Schema UI - Data
+    def get_list_with_latest_version(self) -> list[SchemaEntry]:
+        response = self.get("schemas/versions/latest")
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch latest schema versions")
+            return []
+
+        try:
+            parsed_response = SchemaListResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return []
+
+    def get_versions(self) -> list[SchemaVersionEntry]:
+        response = self.get("schemas/versions")
+        if not response or not response.get("success"):
+            # logging.error()
+            return []
+
+        try:
+            parsed_response = SchemaVersionsResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return []
+
+    def get_versions_for_et_id(self, ETId: int) -> list[int]:
+        response = self.get(f"schemas/envelopeTypes/{ETId}/versions")
+        if not response or not response.get("success"):
+            # logging.error()
+            return []
+        try:
+            parsed_response = SchemaListVersionsResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return []
+
+    # endregion
+
+    # region Schema UI - Index
+
+    def get_indexes(self, ETId: SystemEnvelopeType | int | str) -> list[IndexEntry]:
+
+        if isinstance(ETId, SystemEnvelopeType):
+            etid_value = str(ETId.value)
+        else:
+            etid_value = str(ETId)
+
+        header = {"ETId": etid_value}
+        response = self.get("schemas/envelopeTypes/15/indexes", header)
+
+        try:
+            parsed_response = SchemaIndexResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return []
+
+    def get_indexes_by_table_name(self, tableName: str) -> list[IndexEntry]:
+        response = self.get(
+            f"schemas/envelopeTypes/15/indexesByTableName?tableName={tableName}"
+        )
+
+        try:
+            parsed_response = IndexesByTableNameResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return []
+
+    # endregion
+
+    # region Add Schema
+    def create_schema_authors(
+        self, request: CreateSchemaRequest
+    ) -> SchemaMetadata | None:
+        headers = {"ETId": "50", "SV": "1"}
+        response = self.post("schemas/", json=request.dict(), headers=headers)
+
+        try:
+            parsed_response = CreateSchemaResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
+
+    # def create_schema_publishers(self):
+    #     response = self.post("schemas/")
+
+    #     try:
+    #         pass
+    #     except ValidationError as e:
+    #         logging.error("SchemaListResponse Validation Error: %s", e)
+    #         return []
+
+    # def create_schema_title_author(self):
+    #     response = self.post("schemas/")
+
+    #     try:
+    #         pass
+    #     except ValidationError as e:
+    #         logging.error("SchemaListResponse Validation Error: %s", e)
+    #         return []
 
     # endregion

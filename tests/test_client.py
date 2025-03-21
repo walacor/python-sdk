@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from walacor_sdk.base.w_client import W_Client
-from walacor_sdk.utils.enums import RequestTypeEnum
+from walacor_sdk.utils.enums import RequestType
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"
@@ -64,11 +64,11 @@ def test_client_request_with_authentication():
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
         client.authenticate()
 
-        response = client.request(RequestTypeEnum.GET, TEST_ENDPOINT)
+        response = client.request(RequestType.GET, TEST_ENDPOINT)
 
         assert response == mock_response
         mock_request.assert_called_once_with(
-            RequestTypeEnum.GET,
+            RequestType.GET,
             f"{BASE_URL}/{TEST_ENDPOINT}",
             headers={
                 "Authorization": "Bearer fake_token",
@@ -100,7 +100,7 @@ def test_client_request_reauth_on_401():
 
         client._token = "Bearer expired_token"
 
-        response = client.request(RequestTypeEnum.GET, TEST_ENDPOINT)
+        response = client.request(RequestType.GET, TEST_ENDPOINT)
 
         assert response == mock_success_response
         assert client.token == "Bearer fake_token"
