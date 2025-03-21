@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from walacor_sdk.w_client import W_Client
+from walacor_sdk.base.w_client import W_Client
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"
@@ -95,7 +95,7 @@ def test_client_request_reauth_on_401():
 
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
 
-        client.token = "expired_token"
+        client._token = "expired_token"
 
         response = client.request("GET", TEST_ENDPOINT)
 
