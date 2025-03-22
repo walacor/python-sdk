@@ -1,5 +1,7 @@
 import logging
 
+from typing import cast
+
 from pydantic import ValidationError
 
 from walacor_sdk.base.base_service import BaseService
@@ -7,19 +9,28 @@ from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.schema.models.models import (
     AutoGenField,
     IndexEntry,
+    SchemaDetail,
     SchemaEntry,
+    SchemaItem,
     SchemaMetadata,
+    SchemaSummary,
     SchemaType,
     SchemaVersionEntry,
 )
-from walacor_sdk.schema.models.schema_request import CreateSchemaRequest
+from walacor_sdk.schema.models.schema_request import (
+    CreateSchemaRequest,
+    SchemaQueryListRequest,
+)
 from walacor_sdk.schema.models.schema_response import (
     AutoGenFieldsResponse,
     CreateSchemaResponse,
+    GetEnvelopeTypesResponse,
+    GetSchemaDetailResponse,
     IndexesByTableNameResponse,
     SchemaIndexResponse,
     SchemaListResponse,
     SchemaListVersionsResponse,
+    SchemaQueryListResponse,
     SchemaResponse,
     SchemaVersionsResponse,
 )
@@ -136,9 +147,7 @@ class SchemaService(BaseService):
     # endregion
 
     # region Add Schema
-    def create_schema_authors(
-        self, request: CreateSchemaRequest
-    ) -> SchemaMetadata | None:
+    def create_schema(self, request: CreateSchemaRequest) -> SchemaMetadata | None:
         headers = {"ETId": "50", "SV": "1"}
         response = self.post("schemas/", json=request.dict(), headers=headers)
 
@@ -149,22 +158,64 @@ class SchemaService(BaseService):
             logging.error("SchemaListResponse Validation Error: %s", e)
             return None
 
-    # def create_schema_publishers(self):
-    #     response = self.post("schemas/")
+    # endregion
 
-    #     try:
-    #         pass
-    #     except ValidationError as e:
-    #         logging.error("SchemaListResponse Validation Error: %s", e)
-    #         return []
+    # region Schema Details
 
-    # def create_schema_title_author(self):
-    #     response = self.post("schemas/")
+    def get_schema_details_with_ETId(self, ETId: int) -> SchemaDetail | None:
+        headers = {"ETId": f"{ETId}"}
+        response = self.get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
 
-    #     try:
-    #         pass
-    #     except ValidationError as e:
-    #         logging.error("SchemaListResponse Validation Error: %s", e)
-    #         return []
+        try:
+            response = GetSchemaDetailResponse(**response)
+            return cast(SchemaDetail, response.data)
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
+
+    def get_envelope_types(self) -> list[int] | None:
+        response = self.get("schemas/envelopeTypes")
+
+        try:
+            response = GetEnvelopeTypesResponse(**response)
+            return cast(list[int], response.data)
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
+
+    def get_details_by_id(self, Id: str) -> SchemaDetail | None:
+        response = self.get(f"schemas/{Id}")
+
+        try:
+            response = GetSchemaDetailResponse(**response)
+            return cast(SchemaDetail, response.data)
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
+
+    def get_list(self) -> list[SchemaItem] | None:
+        response = self.get("schemas")
+
+        try:
+            response = SchemaListResponse(**response)
+            return cast(list[SchemaItem], response.data)
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
+
+    def get_schema_list(
+        self, schemaQueryListRequest: SchemaQueryListRequest
+    ) -> list[SchemaSummary] | None:
+        response = self.get(
+            "schemas/schemaList",
+            params=schemaQueryListRequest.model_dump(exclude_none=True),
+        )
+
+        try:
+            parsed_response = SchemaQueryListResponse(**response)
+            return parsed_response.data
+        except ValidationError as e:
+            logging.error("SchemaListResponse Validation Error: %s", e)
+            return None
 
     # endregion

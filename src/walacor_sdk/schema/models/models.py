@@ -154,3 +154,81 @@ class SchemaMetadata(BaseModel):
 
 
 # endregion
+
+# region Schema Detail
+
+
+class SchemaField(BaseModel):
+    FieldName: str
+    DataType: str
+    MaxLength: int | None = None
+    Required: bool | None = False
+    Default: bool | int | float | str | None = None
+    Decimals: int | None = None
+    SystemGenerated: bool | None = False
+
+
+class SchemaIndexItem(BaseModel):
+    Fields: list[str]
+    IndexValue: str
+    ForceUpdate: bool = False
+    Delete: bool = False
+
+
+class SchemaDetail(BaseModel):
+    id: str = Field(..., alias="_id")
+    ETId: int
+    TableName: str
+    Family: str
+    DoSummary: bool
+    Fields: list[SchemaField]
+    Indexes: list[SchemaIndexItem]
+    DbTableName: str
+    DbHistoryTableName: str
+    SV: int
+    LastModifiedBy: str
+    UID: str
+    ORGId: str
+    SL: str
+    HashSign: str
+    HS: str
+    EId: str
+    UpdatedAt: int
+    IsDeleted: bool
+    CreatedAt: int
+
+
+class SchemaItem(BaseModel):
+    id: str = Field(..., alias="_id")
+    ORGId: str
+    ORGName: str
+    EId: str
+    ETId: int
+    TableName: str
+    DbTableName: str
+    DbHistoryTableName: str
+    Family: str
+    DoSummary: bool
+    LastModifiedBy: str
+    CreatedAt: int
+    UpdatedAt: int
+    DV: int | None = None
+    Description: str | None = ""
+
+
+class SchemaSummary(BaseModel):
+    UID: str
+    schema_name: str = Field(..., alias="schema")
+    ETId: int
+    createdDate: int
+    Family: str
+    SV: int
+    numberOfFields: int
+
+
+class SchemaQueryList(BaseModel):
+    data: list[SchemaSummary]
+    total: int
+
+
+# endregion
