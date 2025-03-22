@@ -99,7 +99,7 @@ class SchemaService(BaseService):
             logging.error("SchemaListResponse Validation Error: %s", e)
             return []
 
-    def get_versions_for_et_id(self, ETId: int) -> list[int]:
+    def get_versions_for_ETId(self, ETId: int) -> list[int]:
         response = self.get(f"schemas/envelopeTypes/{ETId}/versions")
         if not response or not response.get("success"):
             # logging.error()
