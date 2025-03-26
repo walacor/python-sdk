@@ -13,6 +13,7 @@ from walacor_sdk.schema.models.models import (
     SchemaEntry,
     SchemaItem,
     SchemaMetadata,
+    SchemaQueryList,
     SchemaSummary,
     SchemaType,
     SchemaVersionEntry,
@@ -26,11 +27,11 @@ from walacor_sdk.schema.models.schema_response import (
     CreateSchemaResponse,
     GetEnvelopeTypesResponse,
     GetSchemaDetailResponse,
+    GetSchemaListResponse,
     IndexesByTableNameResponse,
     SchemaIndexResponse,
     SchemaListResponse,
     SchemaListVersionsResponse,
-    SchemaQueryListResponse,
     SchemaResponse,
     SchemaVersionsResponse,
 )
@@ -149,7 +150,7 @@ class SchemaService(BaseService):
     # region Add Schema
     def create_schema(self, request: CreateSchemaRequest) -> SchemaMetadata | None:
         headers = {"ETId": "50", "SV": "1"}
-        response = self.post("schemas/", json=request.dict(), headers=headers)
+        response = self.post("schemas/", json=request.model_dump(), headers=headers)
 
         try:
             parsed_response = CreateSchemaResponse(**response)
@@ -166,6 +167,10 @@ class SchemaService(BaseService):
         headers = {"ETId": f"{ETId}"}
         response = self.get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
 
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch schema details")
+            return None
+
         try:
             response = GetSchemaDetailResponse(**response)
             return cast(SchemaDetail, response.data)
@@ -175,6 +180,10 @@ class SchemaService(BaseService):
 
     def get_envelope_types(self) -> list[int] | None:
         response = self.get("schemas/envelopeTypes")
+
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch schema details")
+            return None
 
         try:
             response = GetEnvelopeTypesResponse(**response)
@@ -186,6 +195,10 @@ class SchemaService(BaseService):
     def get_details_by_id(self, Id: str) -> SchemaDetail | None:
         response = self.get(f"schemas/{Id}")
 
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch schema details")
+            return None
+
         try:
             response = GetSchemaDetailResponse(**response)
             return cast(SchemaDetail, response.data)
@@ -193,29 +206,38 @@ class SchemaService(BaseService):
             logging.error("SchemaListResponse Validation Error: %s", e)
             return None
 
-    def get_list(self) -> list[SchemaItem] | None:
+    def get_list_schema_items(self) -> list[SchemaItem] | None:
         response = self.get("schemas")
 
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch schema details")
+            return None
+
         try:
-            response = SchemaListResponse(**response)
+            response = GetSchemaListResponse(**response)
             return cast(list[SchemaItem], response.data)
         except ValidationError as e:
             logging.error("SchemaListResponse Validation Error: %s", e)
             return None
 
-    def get_schema_list(
+    def get_schema_query_schema_items(
         self, schemaQueryListRequest: SchemaQueryListRequest
-    ) -> list[SchemaSummary] | None:
+    ) -> SchemaQueryList | None:
         response = self.get(
             "schemas/schemaList",
             params=schemaQueryListRequest.model_dump(exclude_none=True),
         )
 
+        if not response or not response.get("success"):
+            logging.error("Failed to fetch schema details")
+            return None
+
         try:
-            parsed_response = SchemaQueryListResponse(**response)
-            return parsed_response.data
+            data = [SchemaSummary(**item) for item in response["data"]]
+            total = response["total"]
+            return SchemaQueryList(data=data, total=total)
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error("SchemaQueryList Validation Error: %s", e)
             return None
 
     # endregion

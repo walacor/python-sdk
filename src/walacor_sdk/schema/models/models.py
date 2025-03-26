@@ -99,10 +99,10 @@ class IndexKey(BaseModel):
 
 
 class IndexEntry(BaseModel):
-    v: int
+    version: int = Field(..., alias="v")
     key: IndexKey
     name: str
-    ns: str
+    namespace: str = Field(..., alias="ns")
 
 
 # endregion
