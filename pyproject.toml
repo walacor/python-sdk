@@ -6,7 +6,7 @@ requires = [
 ]
 
 [project]
-name = "walacor-sdk"
+name = "walacor_python_sdk"
 description = "Python SDK for Walacor"
 readme = "README.md"
 keywords = [
