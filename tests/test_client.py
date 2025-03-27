@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from walacor_sdk.base.w_client import W_Client
+from walacor_sdk.utils.enums import RequestType
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"
@@ -15,7 +16,7 @@ def test_client_authenticate_success():
     with patch("requests.post") as mock_post:
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"api_token": "fake_token"}
+        mock_response.json.return_value = {"api_token": "Bearer fake_token"}
         mock_post.return_value = mock_response
 
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
@@ -25,10 +26,11 @@ def test_client_authenticate_success():
             f"{BASE_URL}/auth/login",
             json={"userName": USERNAME, "password": PASSWORD},
             headers={"Content-Type": "application/json"},
+            timeout=5,
         )
 
         assert (
-            client.token == "fake_token"
+            client.token == "Bearer fake_token"
         ), f"Expected 'fake_token' but got {client.token}"
 
 
@@ -51,7 +53,7 @@ def test_client_request_with_authentication():
         # Mock authentication response
         mock_auth_response = MagicMock()
         mock_auth_response.status_code = 200
-        mock_auth_response.json.return_value = {"api_token": "fake_token"}
+        mock_auth_response.json.return_value = {"api_token": "Bearer fake_token"}
         mock_post.return_value = mock_auth_response
 
         # Mock request response
@@ -62,16 +64,17 @@ def test_client_request_with_authentication():
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
         client.authenticate()
 
-        response = client.request("GET", TEST_ENDPOINT)
+        response = client.request(RequestType.GET, TEST_ENDPOINT)
 
         assert response == mock_response
         mock_request.assert_called_once_with(
-            "GET",
+            RequestType.GET,
             f"{BASE_URL}/{TEST_ENDPOINT}",
             headers={
                 "Authorization": "Bearer fake_token",
                 "Content-Type": "application/json",
             },
+            timeout=5,
         )
 
 
@@ -81,7 +84,7 @@ def test_client_request_reauth_on_401():
         # Mock authentication response
         mock_auth_response = MagicMock()
         mock_auth_response.status_code = 200
-        mock_auth_response.json.return_value = {"api_token": "fake_token"}
+        mock_auth_response.json.return_value = {"api_token": "Bearer fake_token"}
         mock_post.return_value = mock_auth_response
 
         # Mock request response (First 401, then success)
@@ -95,12 +98,12 @@ def test_client_request_reauth_on_401():
 
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
 
-        client._token = "expired_token"
+        client._token = "Bearer expired_token"
 
-        response = client.request("GET", TEST_ENDPOINT)
+        response = client.request(RequestType.GET, TEST_ENDPOINT)
 
         assert response == mock_success_response
-        assert client.token == "fake_token"
+        assert client.token == "Bearer fake_token"
 
         assert mock_post.call_count == 1
         assert mock_request.call_count == 2
