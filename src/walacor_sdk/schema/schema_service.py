@@ -14,7 +14,6 @@ from walacor_sdk.schema.models.models import (
     SchemaItem,
     SchemaMetadata,
     SchemaQueryList,
-    SchemaSummary,
     SchemaType,
     SchemaVersionEntry,
 )
@@ -32,6 +31,7 @@ from walacor_sdk.schema.models.schema_response import (
     SchemaIndexResponse,
     SchemaListResponse,
     SchemaListVersionsResponse,
+    SchemaQueryListResponse,
     SchemaResponse,
     SchemaVersionsResponse,
 )
@@ -233,8 +233,9 @@ class SchemaService(BaseService):
             return None
 
         try:
-            data = [SchemaSummary(**item) for item in response["data"]]
-            total = response["total"]
+            parsed_response = SchemaQueryListResponse(**response)
+            data = parsed_response.data
+            total = parsed_response.total
             return SchemaQueryList(data=data, total=total)
         except ValidationError as e:
             logging.error("SchemaQueryList Validation Error: %s", e)

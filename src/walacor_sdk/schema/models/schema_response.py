@@ -6,7 +6,7 @@ from walacor_sdk.schema.models.models import (
     SchemaEntry,
     SchemaItem,
     SchemaMetadata,
-    SchemaQueryList,
+    SchemaSummary,
     SchemaType,
     SchemaVersionEntry,
 )
@@ -56,5 +56,5 @@ class GetEnvelopeTypesResponse(BaseResponse[list[int]]):
     pass
 
 
-class SchemaQueryListResponse(BaseResponse[SchemaQueryList]):
+class SchemaQueryListResponse(BaseResponse[list[SchemaSummary]]):
     total: int
