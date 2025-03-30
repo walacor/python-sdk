@@ -2,6 +2,9 @@ from typing import Any
 
 import requests
 
+from walacor_sdk.utils.exceptions import APIConnectionError
+from walacor_sdk.utils.global_exception_handler import global_exception_handler
+
 
 class AuthenticationError(Exception):
     """Raised when authentication fails or token is invalid."""
@@ -24,23 +27,20 @@ class W_Client:
         """Update the base URL."""
         self._base_url = new_url
 
+    @global_exception_handler
     def authenticate(self) -> None:
-        """Authenticate with the Walacor API and store the token internally."""
         response = requests.post(
             f"{self._base_url}/auth/login",
             json={"userName": self._username, "password": self._password},
             headers={"Content-Type": "application/json"},
             timeout=5,
         )
-        if response.status_code == 200:
-            self._token = response.json().get("api_token")
-            if not self._token:
-                raise AuthenticationError("No api_token in response")
-        else:
-            raise AuthenticationError(
-                f"Authentication failed with status code {response.status_code}"
-            )
+        response.raise_for_status()
+        self._token = response.json().get("api_token")
+        if not self._token:
+            raise APIConnectionError("Authentication succeeded but no token returned.")
 
+    @global_exception_handler
     def request(
         self,
         method: str,
@@ -48,7 +48,6 @@ class W_Client:
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Make an API request using stored token and optional custom headers."""
         if not self._token:
             self.authenticate()
 
@@ -66,8 +65,13 @@ class W_Client:
 
         if response.status_code == 401:
             self.authenticate()
-            if self._token is not None:
-                request_headers["Authorization"] = self._token
+
+            if self._token is None:
+                raise APIConnectionError(
+                    "No token available for authenticated request."
+                )
+            request_headers["Authorization"] = self._token
+
             response = requests.request(
                 method,
                 f"{self._base_url}/{endpoint}",
@@ -75,6 +79,8 @@ class W_Client:
                 timeout=5,
                 **kwargs,
             )
+
+        response.raise_for_status()
         return response
 
     def get_default_headers(self) -> dict[str, str]:

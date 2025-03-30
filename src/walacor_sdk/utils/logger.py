@@ -1,5 +1,3 @@
-# walacor_sdk/utils/logger.py
-
 import logging
 import os
 

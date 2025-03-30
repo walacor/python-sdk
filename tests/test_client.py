@@ -1,9 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.utils.enums import RequestType
+from walacor_sdk.utils.exceptions import APIConnectionError
 
 BASE_URL = "http://fakeapi.com"
 USERNAME = "testuser"
@@ -35,15 +37,22 @@ def test_client_authenticate_success():
 
 
 def test_client_authenticate_failure():
-    """Test that W_Client raises an exception on failed authentication"""
+    """Test that W_Client raises APIConnectionError on failed authentication"""
     with patch("requests.post") as mock_post:
         mock_response = MagicMock()
         mock_response.status_code = 401
+        mock_response.raise_for_status.side_effect = requests.HTTPError(
+            "401 Client Error: Unauthorized", response=mock_response
+        )
+        mock_response.reason = "Unauthorized"
         mock_post.return_value = mock_response
 
         client = W_Client(BASE_URL, USERNAME, PASSWORD)
 
-        with pytest.raises(Exception, match="Authentication failed"):
+        with pytest.raises(
+            APIConnectionError,
+            match="HTTP Error 401: Unauthorized",
+        ):
             client.authenticate()
 
 

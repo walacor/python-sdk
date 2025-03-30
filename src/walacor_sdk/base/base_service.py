@@ -1,18 +1,16 @@
-import logging
-
 from abc import ABC
 from typing import Any
 
-import requests
-
 from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.utils.enums import RequestType
+from walacor_sdk.utils.global_exception_handler import global_exception_handler
 
 
 class BaseService(ABC):
     def __init__(self, client: W_Client) -> None:
         self.client = client
 
+    @global_exception_handler
     def _request(
         self,
         method: str,
@@ -21,13 +19,9 @@ class BaseService(ABC):
         **kwargs: Any,
     ) -> Any:
         """Internal method to send API requests with optional custom headers."""
-        try:
-            response = self.client.request(method, endpoint, headers=headers, **kwargs)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logging.error("HTTP Request failed: %s", e)
-            raise
+        response = self.client.request(method, endpoint, headers=headers, **kwargs)
+        response.raise_for_status()
+        return response.json()
 
     def get(
         self, endpoint: str, headers: dict[str, str] | None = None, **kwargs: Any

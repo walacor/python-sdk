@@ -417,6 +417,7 @@ def test_get_indexes_by_table_name_validation_error(mock_logging, service):
         )
 
 
+# TODO over 100000 add test naming
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_create_schema_success(mock_logging, service):
     """Test create_schema returns parsed SchemaMetadata on valid response."""
