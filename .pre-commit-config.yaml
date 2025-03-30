@@ -30,6 +30,7 @@ repos:
       - id: mypy
         args: [--strict]
         additional_dependencies:
+          - pydantic
           - types-requests
           - types-setuptools
           - tokenize-rt==3.2.0
