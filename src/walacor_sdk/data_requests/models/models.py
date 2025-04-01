@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class SingleRecordDetail(BaseModel):
+class SubmissionResult(BaseModel):
     EId: str
     ETId: int
     ES: int
