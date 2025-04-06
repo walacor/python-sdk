@@ -1,5 +1,6 @@
 from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.w_client import W_Client
+from walacor_sdk.data_requests.data_requests_service import DataRequestsService
 from walacor_sdk.schema.schema_service import SchemaService
 
 
@@ -9,12 +10,20 @@ class Facade:
         client: W_Client,
         auth_service_cls: type[AuthService] = AuthService,
         schema_service_cls: type[SchemaService] = SchemaService,
+        data_requests_service_cls: type[DataRequestsService] = DataRequestsService,
     ) -> None:
-        self._auth: AuthService | None = None
-        self._schema: SchemaService | None = None
         self._client: W_Client = client
+
+        self._auth: AuthService | None = None
         self.auth_service_cls: type[AuthService] = auth_service_cls
+
+        self._schema: SchemaService | None = None
         self.schema_service_cls: type[SchemaService] = schema_service_cls
+
+        self._data_requests: DataRequestsService | None = None
+        self.data_requests_service_cls: type[DataRequestsService] = (
+            data_requests_service_cls
+        )
 
     @property
     def auth(self) -> AuthService:
@@ -27,3 +36,9 @@ class Facade:
         if self._schema is None:
             self._schema = self.schema_service_cls(self._client)
         return self._schema
+
+    @property
+    def data_requests(self) -> DataRequestsService:
+        if self._data_requests is None:
+            self._data_requests = self.data_requests_service_cls(self._client)
+        return self._data_requests

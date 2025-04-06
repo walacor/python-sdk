@@ -1,6 +1,7 @@
 from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.facade import Facade
 from walacor_sdk.base.w_client import W_Client
+from walacor_sdk.data_requests.data_requests_service import DataRequestsService
 from walacor_sdk.schema.schema_service import SchemaService
 
 
@@ -58,3 +59,10 @@ class WalacorService:
         if not self._facade:
             raise ValueError("Service not set up. Call setup() first.")
         return self._facade.schema
+
+    @property
+    def data_requests(self) -> DataRequestsService:
+        """Expose DataRequestsService under WalacorService.data_requests"""
+        if not self._facade:
+            raise ValueError("Service not set up. Call setup() first.")
+        return self._facade.data_requests
