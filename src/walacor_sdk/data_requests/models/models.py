@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -9,15 +11,15 @@ class SubmissionResult(BaseModel):
 
 
 class ComplexQueryRecords(BaseModel):
-    Records: list[str]
+    Records: list[dict[str, Any]]
     Total: int
 
 
 class QueryApiAggregate(BaseModel):
-    Records: list[str]
+    Records: list[dict[str, Any]]
     Total: int
 
 
 class ComplexQMLQueryRecords(BaseModel):
-    Records: list[str]
+    Records: list[dict[str, Any]]
     Total: int

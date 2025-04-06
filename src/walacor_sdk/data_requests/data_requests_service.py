@@ -51,7 +51,7 @@ class DataRequestsService(BaseService):
             return None
 
     def insert_multiple_records(
-        self, listOfJsonRecords: list[str], ETId: int
+        self, listOfJsonRecords: list[dict[str, Any]], ETId: int
     ) -> SubmissionResult | None:
         records = {"Data": listOfJsonRecords}
         header = {"ETId": str(ETId)}
@@ -72,14 +72,11 @@ class DataRequestsService(BaseService):
 
     # region Update
 
-    def update_single_record(self, record: str, ETId: int) -> SubmissionResult | None:
-        try:
-            parsed_record = record
-        except json.JSONDecodeError as e:
-            logging.error("Invalid JSON format: %s", e)
-            return None
+    def update_single_record_with_UID(
+        self, record: dict[str, Any], ETId: int
+    ) -> SubmissionResult | None:
 
-        if "UID" not in parsed_record:
+        if "UID" not in record:
             logging.error("UID is required to update a record")
             return None
 
@@ -129,15 +126,13 @@ class DataRequestsService(BaseService):
     # endregion
 
     # region Read
-    # check if header driven or queryparam driven
-
     def get_all(
         self,
         ETId: int,
         pageNumber: int = 0,
         pageSize: int = 0,
         fromSummary: bool = False,
-    ) -> list[str] | None:
+    ) -> list[dict[str, Any]] | None:
         header = {"ETId": str(ETId)}
         query = f"query/get?pageNo={pageNumber}&pageSize={pageSize}&fromSummary={'true' if fromSummary else 'false'}"
         response = self.post(query, headers=header)
@@ -154,11 +149,11 @@ class DataRequestsService(BaseService):
             return None
 
     def get_single_record_by_record_id(
-        self, au_id: str, ETId: int, fromSummary: bool = False
-    ) -> str | None:
+        self, record_id: dict[str, str], ETId: int, fromSummary: bool = False
+    ) -> list[dict[str, Any]] | None:
         header = {"ETId": str(ETId)}
         query = f"query/get?fromSummary={'true' if fromSummary else 'false'}"
-        response = self.post(query, headers=header, json={"au_id": str(au_id)})
+        response = self.post(query, headers=header, json=record_id)
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch single record.")
@@ -166,7 +161,7 @@ class DataRequestsService(BaseService):
 
         try:
             parsed_response = GetSingleRecordResponse(**response)
-            return parsed_response.data[0] if parsed_response.data else None
+            return parsed_response.data
         except ValidationError as e:
             logging.error("GetSingleRecordResponse Validation Error: %s", e)
             return None
@@ -215,7 +210,7 @@ class DataRequestsService(BaseService):
 
     def post_query_api_aggregate(
         self,
-        payload: dict[str, Any],
+        payload: list[dict[str, Any]],
         ETId: int = 10,
         schemaVersion: int = 1,
         dataVersion: int = 1,
@@ -225,7 +220,7 @@ class DataRequestsService(BaseService):
             "SV": str(schemaVersion),
             "DV": str(dataVersion),
         }
-        response = self.post("query/getaggregate", headers=headers, json=payload)
+        response = self.post("query/getComplex", headers=headers, json=payload)
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch query aggregate results.")
@@ -241,7 +236,9 @@ class DataRequestsService(BaseService):
             return None
 
     def post_complex_MQL_queries(
-        self, ETId: int, pipeline: list[dict[str, Any]]
+        self,
+        pipeline: list[dict[str, Any]],
+        ETId: int,
     ) -> ComplexQMLQueryRecords | None:
         header = {"ETId": str(ETId)}
         response = self.post("query/getcomplex", headers=header, json=pipeline)
