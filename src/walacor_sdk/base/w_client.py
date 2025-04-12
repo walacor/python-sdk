@@ -51,7 +51,11 @@ class W_Client:
         if not self._token:
             self.authenticate()
 
-        request_headers = self.get_default_headers()
+        is_file_upload = "files" in kwargs and kwargs["files"] is not None
+        content_type = None if is_file_upload else "application/json"
+
+        request_headers = self.get_default_headers(content_type)
+
         if headers:
             request_headers.update(headers)
 
@@ -83,9 +87,12 @@ class W_Client:
         response.raise_for_status()
         return response
 
-    def get_default_headers(self) -> dict[str, str]:
-        """Generate default headers with authentication token."""
-        headers = {"Content-Type": "application/json"}
+    def get_default_headers(
+        self, content_type: str | None = "application/json"
+    ) -> dict[str, str]:
+        headers = {}
+        if content_type is not None:
+            headers["Content-Type"] = content_type
         if self._token:
             headers["Authorization"] = self._token
         return headers
