@@ -43,7 +43,7 @@ def test_get_data_types_success(mock_logging, service):
             {"Name": "INTEGER", "DefaultValue": 0, "MinValue": 0, "MaxValue": 100}
         ],
     }
-    service.get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response)
 
     result = service.get_data_types()
 
@@ -56,7 +56,7 @@ def test_get_data_types_success(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_data_types_failure_flag(mock_logging, service):
     """Test get_data_types returns empty list when success flag is False."""
-    service.get = MagicMock(return_value={"success": False})
+    service._get = MagicMock(return_value={"success": False})
 
     result = service.get_data_types()
 
@@ -67,10 +67,10 @@ def test_get_data_types_failure_flag(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_data_types_validation_error(mock_logging, service):
     """Test get_data_types handles ValidationError and logs it."""
-    service.get = MagicMock(return_value={"success": True, "data": [{}]})
+    service._get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaResponse",
         side_effect=ValidationError.from_exception_data("SchemaResponse", []),
     ):
         result = service.get_data_types()
@@ -94,7 +94,7 @@ def test_get_platform_auto_generation_fields_success(mock_logging, service):
             }
         },
     }
-    service.get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response)
 
     result = service.get_platform_auto_generation_fields()
 
@@ -108,7 +108,7 @@ def test_get_platform_auto_generation_fields_success(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_platform_auto_generation_fields_failure_flag(mock_logging, service):
     """Test get_platform_auto_generation_fields returns empty dict when success flag is False."""
-    service.get = MagicMock(return_value={"success": False})
+    service._get = MagicMock(return_value={"success": False})
 
     result = service.get_platform_auto_generation_fields()
 
@@ -121,10 +121,10 @@ def test_get_platform_auto_generation_fields_failure_flag(mock_logging, service)
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_platform_auto_generation_fields_validation_error(mock_logging, service):
     """Test get_platform_auto_generation_fields handles ValidationError and logs it."""
-    service.get = MagicMock(return_value={"success": True, "data": {"Invalid": {}}})
+    service._get = MagicMock(return_value={"success": True, "data": {"Invalid": {}}})
 
     with patch(
-        "walacor_sdk.schema.schema_service.AutoGenFieldsResponse",
+        "walacor_sdk.schema.models.schema_response.AutoGenFieldsResponse",
         side_effect=ValidationError.from_exception_data("AutoGenFieldsResponse", []),
     ):
         result = service.get_platform_auto_generation_fields()
@@ -142,7 +142,7 @@ def test_get_list_with_latest_version_success(mock_logging, service):
         "data": [{"ETId": 1, "TableName": "TestTable", "SV": 1}],
     }
 
-    service.get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response)
 
     result = service.get_list_with_latest_version()
 
@@ -171,7 +171,7 @@ def test_get_list_with_latest_version_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaListResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaListResponse",
         side_effect=ValidationError.from_exception_data("SchemaListResponse", []),
     ):
         result = service.get_list_with_latest_version()
@@ -216,7 +216,7 @@ def test_get_versions_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaVersionsResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaVersionsResponse",
         side_effect=ValidationError.from_exception_data("SchemaVersionsResponse", []),
     ):
         result = service.get_versions()
@@ -259,7 +259,7 @@ def test_get_versions_for_etid_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaListVersionsResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaListResponse",
         side_effect=ValidationError.from_exception_data(
             "SchemaListVersionsResponse", []
         ),
@@ -349,10 +349,10 @@ def test_get_indexes_failure_flag(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_schema_index_response_model_validation_error(mock_logging, service):
     """Test SchemaIndexResponse model raises ValidationError when 'data' is missing."""
-    service.get = MagicMock(return_value={"success": True})
+    service._get = MagicMock(return_value={"success": True})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaIndexResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaIndexResponse",
         side_effect=ValidationError.from_exception_data("SchemaIndexResponse", []),
     ):
         result = service.get_indexes(ETId=99)
@@ -400,7 +400,7 @@ def test_get_indexes_by_table_name_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.IndexesByTableNameResponse",
+        "walacor_sdk.schema.models.schema_response.IndexesByTableNameResponse",
         side_effect=ValidationError.from_exception_data(
             "IndexesByTableNameResponse", []
         ),
@@ -478,7 +478,7 @@ def test_create_schema_validation_error(mock_logging, service):
     service.post = MagicMock(return_value={"success": True, "data": {}})
 
     with patch(
-        "walacor_sdk.schema.schema_service.CreateSchemaResponse",
+        "walacor_sdk.schema.models.schema_response.CreateSchemaResponse",
         side_effect=ValidationError.from_exception_data("CreateSchemaResponse", []),
     ):
         result = service.create_schema(request)
@@ -552,7 +552,7 @@ def test_get_schema_details_with_etid_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": {}})
 
     with patch(
-        "walacor_sdk.schema.schema_service.GetSchemaDetailResponse",
+        "walacor_sdk.schema.models.schema_response.GetSchemaDetailResponse",
         side_effect=ValidationError.from_exception_data("GetSchemaDetailResponse", []),
     ):
         result = service.get_schema_details_with_ETId(ETId=42)
@@ -600,7 +600,7 @@ def test_get_envelope_types_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.GetEnvelopeTypesResponse",
+        "walacor_sdk.schema.models.schema_response.GetEnvelopeTypesResponse",
         side_effect=ValidationError.from_exception_data("GetEnvelopeTypesResponse", []),
     ):
         result = service.get_envelope_types()
@@ -670,7 +670,7 @@ def test_get_details_by_id_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": {}})
 
     with patch(
-        "walacor_sdk.schema.schema_service.GetSchemaDetailResponse",
+        "walacor_sdk.schema.models.schema_response.GetSchemaDetailResponse",
         side_effect=ValidationError.from_exception_data("GetSchemaDetailResponse", []),
     ):
         result = service.get_details_by_id("bad_schema_id")
@@ -738,7 +738,7 @@ def test_get_list_schema_items_validation_error(mock_logging, service):
     service.get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaListResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaListResponse",
         side_effect=ValidationError.from_exception_data("SchemaListResponse", []),
     ):
         result = service.get_list_schema_items()
@@ -830,10 +830,10 @@ def test_get_schema_query_schema_items_validation_error(mock_logging, service):
         endDate="2025-10-12T14:10:17.272Z",
     )
 
-    service.get = MagicMock(return_value={"success": True, "data": [{}], "total": 1})
+    service._get = MagicMock(return_value={"success": True, "data": [{}], "total": 1})
 
     with patch(
-        "walacor_sdk.schema.schema_service.SchemaQueryListResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaQueryListResponse",
         side_effect=ValidationError.from_exception_data("SchemaQueryListResponse", []),
     ):
         result = service.get_schema_query_schema_items(queryParams)
