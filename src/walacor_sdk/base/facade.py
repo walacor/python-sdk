@@ -1,6 +1,6 @@
 from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.w_client import W_Client
-from walacor_sdk.file_requests.file_request_service import FileRequestService
+from walacor_sdk.file_request.file_request_service import FileRequestService
 from walacor_sdk.schema.schema_service import SchemaService
 
 

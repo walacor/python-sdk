@@ -2,11 +2,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from walacor_sdk.file_requests.file_request_service import FileRequestService
-from walacor_sdk.file_requests.models.file_request_request import (
+from walacor_sdk.file_request.file_request_service import FileRequestService
+from walacor_sdk.file_request.models.file_request_request import (
     VerifySingleFileRequest,
 )
-from walacor_sdk.file_requests.models.models import File, FileInfo
+from walacor_sdk.file_request.models.models import FileInfo
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def test_verify_single_file_success(mock_logging, service):
     request_model = VerifySingleFileRequest(path=path)
 
     mock_response = FileInfo(
-        File=File(
+        File=pytest.File(
             Name="sample.pdf",
             Encoding="7bit",
             MimeType="application/pdf",
@@ -51,7 +51,7 @@ def test_verify_single_file_success(mock_logging, service):
     service.post.assert_called_once()
 
 
-@patch("walacor_sdk.file_request.file_request_service.logging")
+@patch("walacor_sdk.file_request.file_request_service.logger")
 def test_verify_single_file_failure(mock_logging):
     path = "tests/assets/sample.pdf"
     request_model = VerifySingleFileRequest(path=path)
@@ -67,7 +67,7 @@ def test_verify_single_file_failure(mock_logging):
     mock_logging.error.assert_called()
 
 
-@patch("walacor_sdk.file_request.file_request_service.logging")
+@patch("walacor_sdk.file_request.file_request_service.logger")
 def test_verify_single_file_validation_error(mock_logging):
     path = "tests/assets/sample.pdf"
     request_model = VerifySingleFileRequest(path=path)

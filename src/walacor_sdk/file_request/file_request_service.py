@@ -13,16 +13,16 @@ import requests
 from pydantic import ValidationError
 
 from walacor_sdk.base.base_service import BaseService
-from walacor_sdk.file_requests.models.file_request_request import (
+from walacor_sdk.file_request.models.file_request_request import (
     StoreFileRequest,
     VerifySingleFileRequest,
 )
-from walacor_sdk.file_requests.models.file_request_response import (
+from walacor_sdk.file_request.models.file_request_response import (
     ListFilesResponse,
     StoreFileResponse,
     VerifySuccessResponse,
 )
-from walacor_sdk.file_requests.models.models import (
+from walacor_sdk.file_request.models.models import (
     DuplicateData,
     FileInfo,
     FileMetadata,

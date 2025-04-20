@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from walacor_sdk.base.model.base_response_model import BaseResponse
-from walacor_sdk.file_requests.models.models import (
+from walacor_sdk.file_request.models.models import (
     DuplicateData,
     FileInfoWrapper,
     FileMetadata,

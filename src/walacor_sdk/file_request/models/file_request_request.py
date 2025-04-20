@@ -3,7 +3,7 @@ from typing import IO
 
 from pydantic import BaseModel
 
-from walacor_sdk.file_requests.models.models import FileInfo, FileItem
+from walacor_sdk.file_request.models.models import FileInfo, FileItem
 
 
 class VerifySingleFileRequest:

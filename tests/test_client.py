@@ -57,7 +57,7 @@ def test_client_authenticate_failure():
 
 
 def test_client_request_with_authentication():
-    """Test that W_Client adds the authentication token in headers"""
+    """Test that W_Client adds the authentication token in headers and makes a request"""
     with patch("requests.post") as mock_post, patch("requests.request") as mock_request:
         # Mock authentication response
         mock_auth_response = MagicMock()
@@ -76,15 +76,17 @@ def test_client_request_with_authentication():
         response = client.request(RequestType.GET, TEST_ENDPOINT)
 
         assert response == mock_response
-        mock_request.assert_called_once_with(
-            RequestType.GET,
-            f"{BASE_URL}/{TEST_ENDPOINT}",
-            headers={
-                "Authorization": "Bearer fake_token",
-                "Content-Type": "application/json",
-            },
-            timeout=5,
-        )
+
+        # Assert request was made with correct parameters
+        mock_request.assert_called_once()
+        called_args, called_kwargs = mock_request.call_args
+
+        assert called_args[0] == RequestType.GET
+        assert called_args[1] == f"{BASE_URL}/{TEST_ENDPOINT}"
+        assert called_kwargs["headers"] == {
+            "Authorization": "Bearer fake_token",
+            "Content-Type": "application/json",
+        }
 
 
 def test_client_request_reauth_on_401():

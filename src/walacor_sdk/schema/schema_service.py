@@ -1,5 +1,3 @@
-import logging
-
 from typing import cast
 
 from pydantic import ValidationError
@@ -36,6 +34,9 @@ from walacor_sdk.schema.models.schema_response import (
     SchemaVersionsResponse,
 )
 from walacor_sdk.utils.enums import SystemEnvelopeType
+from walacor_sdk.utils.logger import get_logger
+
+logging = get_logger(__name__)
 
 
 class SchemaService(BaseService):
