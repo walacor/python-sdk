@@ -63,7 +63,6 @@ class W_Client:
             method,
             f"{self._base_url}/{endpoint}",
             headers=request_headers,
-            timeout=5,
             **kwargs,
         )
 
@@ -80,9 +79,11 @@ class W_Client:
                 method,
                 f"{self._base_url}/{endpoint}",
                 headers=request_headers,
-                timeout=5,
                 **kwargs,
             )
+
+        if response.status_code == 422:
+            return response
 
         response.raise_for_status()
         return response

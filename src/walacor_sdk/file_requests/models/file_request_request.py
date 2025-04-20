@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import IO
 
-from walacor_sdk.file_requests.models.models import FileItem
+from pydantic import BaseModel
+
+from walacor_sdk.file_requests.models.models import FileInfo, FileItem
 
 
 class VerifySingleFileRequest:
@@ -17,9 +19,5 @@ class VerifySingleFileRequest:
         return [self.file.to_tuple()]
 
 
-class VerifyMultipleFilesRequest:
-    def __init__(self, paths: list[str | Path]) -> None:
-        self.files = [FileItem(path) for path in paths]
-
-    def to_files_param(self) -> list[tuple[str, tuple[str, IO[bytes], str]]]:
-        return [file.to_tuple() for file in self.files]
+class StoreFileRequest(BaseModel):
+    fileInfo: FileInfo

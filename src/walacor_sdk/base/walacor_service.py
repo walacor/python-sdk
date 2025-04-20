@@ -1,6 +1,7 @@
 from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.facade import Facade
 from walacor_sdk.base.w_client import W_Client
+from walacor_sdk.file_requests.file_request_service import FileRequestService
 from walacor_sdk.schema.schema_service import SchemaService
 
 
@@ -54,7 +55,14 @@ class WalacorService:
 
     @property
     def schema(self) -> SchemaService:
-        """Expose SchemaService under WalacorService.auth"""
+        """Expose SchemaService under WalacorService.schema_service"""
         if not self._facade:
             raise ValueError("Service not set up. Call setup() first.")
         return self._facade.schema
+
+    @property
+    def file_request(self) -> FileRequestService:
+        """Expose FileRequestService under WalacorService.file_request"""
+        if not self._facade:
+            raise ValueError("Service not set up. Call setup() first.")
+        return self._facade.file_request

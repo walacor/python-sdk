@@ -16,32 +16,41 @@ class BaseService(ABC):
         method: str,
         endpoint: str,
         headers: dict[str, str] | None = None,
+        parse_json: bool = True,
         **kwargs: Any,
     ) -> Any:
         """Internal method to send API requests with optional custom headers."""
         response = self.client.request(method, endpoint, headers=headers, **kwargs)
-        response.raise_for_status()
-        return response.json()
 
-    def get(
+        if parse_json:
+            return response.json()
+        return response
+
+    def _get(
         self, endpoint: str, headers: dict[str, str] | None = None, **kwargs: Any
     ) -> Any:
         """Send a GET request with optional custom headers."""
         return self._request(RequestType.GET, endpoint, headers=headers, **kwargs)
 
-    def post(
-        self, endpoint: str, headers: dict[str, str] | None = None, **kwargs: Any
+    def _post(
+        self,
+        endpoint: str,
+        headers: dict[str, str] | None = None,
+        parse_json: bool = True,
+        **kwargs: Any,
     ) -> Any:
         """Send a POST request with optional custom headers."""
-        return self._request(RequestType.POST, endpoint, headers=headers, **kwargs)
+        return self._request(
+            RequestType.POST, endpoint, headers=headers, parse_json=parse_json, **kwargs
+        )
 
-    def put(
+    def _put(
         self, endpoint: str, headers: dict[str, str] | None = None, **kwargs: Any
     ) -> Any:
         """Send a PUT request with optional custom headers."""
         return self._request(RequestType.PUT, endpoint, headers=headers, **kwargs)
 
-    def delete(
+    def _delete(
         self, endpoint: str, headers: dict[str, str] | None = None, **kwargs: Any
     ) -> Any:
         """Send a DELETE request with optional custom headers."""

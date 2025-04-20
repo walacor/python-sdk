@@ -3,9 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from walacor_sdk.schema.models.models import (
-    CreateSchemaDefinition,
-)
+from walacor_sdk.schema.models.models import CreateSchemaDefinition
 
 
 class CreateSchemaRequest(BaseModel):

@@ -58,12 +58,12 @@ def test_verify_single_file_failure(mock_logging):
 
     service = FileRequestService(client=MagicMock())
 
-    service.post = MagicMock(return_value=None)
+    service._post = MagicMock(return_value=None)
 
-    result = service.verify(request_model)
+    result = service.verify_single_file(request_model)
 
     assert result is None
-    service.post.assert_called_once()
+    service._post.assert_called_once()
     mock_logging.error.assert_called()
 
 
@@ -85,9 +85,9 @@ def test_verify_single_file_validation_error(mock_logging):
         },
     }
 
-    service.post = MagicMock(return_value=malformed_response)
+    service._post = MagicMock(return_value=malformed_response)
 
-    result = service.verify(request_model)
+    result = service.verify_single_file(request_model)
 
     assert result is None
     mock_logging.error.assert_called()
