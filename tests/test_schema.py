@@ -425,7 +425,7 @@ def test_create_schema_success(mock_logging, service):
         ETId=50,
         SV=1,
         Schema={
-            "ETId": 50,
+            "ETId": 12345,
             "TableName": "MyTable",
             "Family": "MyFamily",
             "DoSummary": False,
@@ -466,7 +466,7 @@ def test_create_schema_validation_error(mock_logging, service):
         ETId=50,
         SV=1,
         Schema={
-            "ETId": 50,
+            "ETId": 12345,
             "TableName": "MyTable",
             "Family": "MyFamily",
             "DoSummary": False,
