@@ -46,7 +46,7 @@ class SchemaService(BaseService):
     # region Schema Fields
     def get_data_types(self) -> list[SchemaType]:
         logging.info("Fetching data types...")
-        response = self.get("schemas/dataTypes")
+        response = self._get("schemas/dataTypes")
         if not response or not response.get("success"):
             logging.error("Failed to fetch data")
             return []
@@ -60,7 +60,7 @@ class SchemaService(BaseService):
 
     def get_platform_auto_generation_fields(self) -> dict[str, AutoGenField]:
         logging.info("Fetching platform auto-generation fields...")
-        response = self.get("schemas/systemFields")
+        response = self._get("schemas/systemFields")
         if not response or not response.get("success"):
             logging.error("Failed to fetch platform auto-generation fields")
             return {}
@@ -76,7 +76,7 @@ class SchemaService(BaseService):
 
     # region Schema UI - Data
     def get_list_with_latest_version(self) -> list[SchemaEntry]:
-        response = self.get("schemas/versions/latest")
+        response = self._get("schemas/versions/latest")
         if not response or not response.get("success"):
             logging.error("Failed to fetch latest schema versions")
             return []
@@ -89,7 +89,7 @@ class SchemaService(BaseService):
             return []
 
     def get_versions(self) -> list[SchemaVersionEntry]:
-        response = self.get("schemas/versions")
+        response = self._get("schemas/versions")
         if not response or not response.get("success"):
             # logging.error()
             return []
@@ -102,7 +102,7 @@ class SchemaService(BaseService):
             return []
 
     def get_versions_for_ETId(self, ETId: int) -> list[int]:
-        response = self.get(f"schemas/envelopeTypes/{ETId}/versions")
+        response = self._get(f"schemas/envelopeTypes/{ETId}/versions")
         if not response or not response.get("success"):
             # logging.error()
             return []
@@ -125,7 +125,7 @@ class SchemaService(BaseService):
             etid_value = str(ETId)
 
         header = {"ETId": etid_value}
-        response = self.get("schemas/envelopeTypes/15/indexes", header)
+        response = self._get("schemas/envelopeTypes/15/indexes", header)
 
         try:
             parsed_response = SchemaIndexResponse(**response)
@@ -135,7 +135,7 @@ class SchemaService(BaseService):
             return []
 
     def get_indexes_by_table_name(self, tableName: str) -> list[IndexEntry]:
-        response = self.get(
+        response = self._get(
             f"schemas/envelopeTypes/15/indexesByTableName?tableName={tableName}"
         )
 
@@ -151,7 +151,7 @@ class SchemaService(BaseService):
     # region Add Schema
     def create_schema(self, request: CreateSchemaRequest) -> SchemaMetadata | None:
         headers = {"ETId": "50", "SV": "1"}
-        response = self.post("schemas/", json=request.model_dump(), headers=headers)
+        response = self._post("schemas/", json=request.model_dump(), headers=headers)
 
         try:
             parsed_response = CreateSchemaResponse(**response)
@@ -166,7 +166,7 @@ class SchemaService(BaseService):
 
     def get_schema_details_with_ETId(self, ETId: int) -> SchemaDetail | None:
         headers = {"ETId": f"{ETId}"}
-        response = self.get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
+        response = self._get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch schema details")
@@ -180,7 +180,7 @@ class SchemaService(BaseService):
             return None
 
     def get_envelope_types(self) -> list[int] | None:
-        response = self.get("schemas/envelopeTypes")
+        response = self._get("schemas/envelopeTypes")
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch schema details")
@@ -194,7 +194,7 @@ class SchemaService(BaseService):
             return None
 
     def get_details_by_id(self, Id: str) -> SchemaDetail | None:
-        response = self.get(f"schemas/{Id}")
+        response = self._get(f"schemas/{Id}")
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch schema details")
@@ -208,7 +208,7 @@ class SchemaService(BaseService):
             return None
 
     def get_list_schema_items(self) -> list[SchemaItem] | None:
-        response = self.get("schemas")
+        response = self._get("schemas")
 
         if not response or not response.get("success"):
             logging.error("Failed to fetch schema details")
@@ -224,7 +224,7 @@ class SchemaService(BaseService):
     def get_schema_query_schema_items(
         self, schemaQueryListRequest: SchemaQueryListRequest
     ) -> SchemaQueryList | None:
-        response = self.get(
+        response = self._get(
             "schemas/schemaList",
             params=schemaQueryListRequest.model_dump(exclude_none=True),
         )

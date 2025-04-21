@@ -1,0 +1,285 @@
+from __future__ import annotations
+
+import mimetypes
+import os
+import re
+
+from pathlib import Path
+from typing import Any, cast
+from urllib.parse import urljoin
+
+import requests
+
+from pydantic import ValidationError
+
+from walacor_sdk.base.base_service import BaseService
+from walacor_sdk.file_request.models.file_request_request import (
+    StoreFileRequest,
+    VerifySingleFileRequest,
+)
+from walacor_sdk.file_request.models.file_request_response import (
+    ListFilesResponse,
+    StoreFileResponse,
+    VerifySuccessResponse,
+)
+from walacor_sdk.file_request.models.models import (
+    DuplicateData,
+    FileInfo,
+    FileMetadata,
+    StoreFileData,
+)
+from walacor_sdk.utils.exceptions import DuplicateFileError, FileRequestError
+from walacor_sdk.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+__all__ = ["FileRequestError", "DuplicateFileError", "FileRequestService"]
+
+
+class FileRequestService(BaseService):
+    # ------------------------------------------------------------------ verify
+    def verify(
+        self, *, file: VerifySingleFileRequest, use_progress: bool = False
+    ) -> FileInfo:
+        """
+        Upload *file* for verification and return validated ``FileInfo``.
+
+        :raise FileRequestError:  On network/validation failure.
+        :raise DuplicateFileError: If the backend reports the file already exists.
+        """
+        logger.info("Verifying file: %s", file.file.path)
+
+        try:
+            if use_progress:
+                response_json = self._upload_file_with_progress(
+                    path=str(file.file.path),
+                    url=urljoin(self.client.base_url, "api/v2/files/verify"),
+                    field_name="file",
+                    mime_type=file.file.mimetype,
+                )
+            else:
+                response_json = self._post(
+                    "v2/files/verify", files=file.to_files_param()
+                )
+
+            if response_json.get("success") is True:
+                parsed_success = VerifySuccessResponse(**response_json)
+                return parsed_success.data.fileInfo
+
+            if "duplicateData" in response_json:
+                dup = DuplicateData(**response_json["duplicateData"])
+                raise DuplicateFileError(
+                    f"Duplicate file detected (UID={dup.uid[0]}, EId={dup.eid})"
+                )
+
+            raise FileRequestError("Unexpected verification response structure.")
+
+        except DuplicateFileError:
+            raise
+        except (requests.RequestException, ValidationError) as exc:
+            logger.exception("File verification failed")
+            raise FileRequestError("verification failed") from exc
+
+    # ------------------------------------------------------------------ store
+    def store(self, *, file_info: FileInfo) -> StoreFileData:
+        """
+        Store previously verified *file_info* in the Walacor backend and return storage metadata.
+
+        :param file_info: Metadata of the verified file to be stored.
+        :return: Storage metadata as `StoreFileData` including UID, storage path, and references.
+
+        :raise FileRequestError: On failure during API call or response parsing.
+        """
+        payload = StoreFileRequest(fileInfo=file_info)
+        try:
+            response_json = self._post(
+                "v2/files/store", json=payload.model_dump(by_alias=True)
+            )
+
+            parsed = StoreFileResponse(**response_json)
+            return parsed.data
+        except (requests.RequestException, ValidationError) as exc:
+            logger.exception("Storing file failed")
+            raise FileRequestError("store failed") from exc
+
+    # ------------------------------------------------------------------ download
+    def download(self, *, uid: str, save_to: str | Path | None = None) -> Path:
+        """
+        Download the file identified by *uid* and save it to disk.
+
+        :param uid: Unique identifier of the file in Walacor.
+        :param save_to: Optional path or directory to save the downloaded file.
+                        If a filename is included, the file will be saved there.
+                        If only a directory is given or None, the SDK will use metadata to name the file.
+
+        :return: Path to the downloaded file on local disk.
+
+        :raise FileRequestError: If metadata is missing, download fails, or file cannot be saved.
+        """
+        logger.info("Downloading file UID=%s", uid)
+
+        metadata = self._get_metadata(uid)
+        if metadata is None:
+            raise FileRequestError(f"no metadata found for UID {uid!r}")
+
+        response = self._request_stream("download", json={"UID": uid})
+
+        if isinstance(save_to, str | Path) and Path(save_to).suffix:
+            file_path = Path(save_to).expanduser().resolve()
+            save_dir = file_path.parent
+            filename = file_path.name
+        else:
+            filename = metadata.name or self._extract_filename_from_headers(
+                dict(response.headers),
+                uid,
+                metadata.mimetype or "application/octet-stream",
+            )
+
+            save_dir = Path(save_to) if save_to else self._default_download_dir()
+            file_path = save_dir / filename
+
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            with open(file_path, "wb") as fp:
+                for chunk in response.iter_content(chunk_size=None):
+                    fp.write(chunk)
+            logger.info("File saved to %s", file_path)
+            return file_path
+        except OSError as exc:
+            logger.exception("Failed to write file to disk")
+            raise FileRequestError("failed to write file") from exc
+
+    # ------------------------------------------------------------------ list
+    def list_files(
+        self,
+        *,
+        uid: str | None = None,
+        page_size: int = 0,
+        page_no: int = 0,
+        from_summary: bool = False,
+        total_req: bool = True,
+    ) -> list[FileMetadata]:
+        """
+        List files available in the Walacor backend, optionally filtered by UID.
+
+        :param uid: Optional UID to filter the files.
+        :param page_size: Number of records per page (pagination).
+        :param page_no: Page number for paginated requests.
+        :param from_summary: Whether to retrieve files from the summary view.
+        :param total_req: Whether to include total count in the response.
+
+        :return: List of file metadata entries matching the query.
+
+        :raise FileRequestError: If the request fails or response parsing encounters an error.
+        """
+        logger.info("Listing files from server")
+
+        query = (
+            f"query/get?fromSummary={str(from_summary).lower()}"
+            f"&totalReq={str(total_req).lower()}"
+            f"&pageSize={page_size}&pageNo={page_no}"
+        )
+
+        payload: dict[str, Any] = {"UID": uid} if uid else {}
+        headers = {"ETId": "17"}
+
+        try:
+            response_json = self._post(query, json=payload, headers=headers)
+            parsed = ListFilesResponse(**response_json)
+            logger.info("Received %s file(s)", parsed.total)
+            return parsed.data
+        except (requests.RequestException, ValidationError) as exc:
+            logger.exception("Failed to list files")
+            raise FileRequestError("list files failed") from exc
+
+    # ------------------------------------------------------------------ helpers
+    def _get_metadata(self, uid: str) -> FileMetadata | None:
+        for f in self.list_files(uid=uid):
+            if getattr(f, "Status", None) == "received":
+                return f
+        return None
+
+    def _request_stream(self, path: str, **req_kwargs: Any) -> requests.Response:
+        url_path = urljoin("v2/files/download", path)
+
+        try:
+            response = cast(
+                requests.Response,
+                self._post(url_path, parse_json=False, stream=True, **req_kwargs),
+            )
+            response.raise_for_status()
+            return response
+        except requests.RequestException:
+            logger.exception("Streaming HTTP request to %s failed", url_path)
+            raise
+
+    @staticmethod
+    def _extract_filename_from_headers(
+        headers: dict[str, str], uid: str, content_type: str
+    ) -> str:
+        cd = headers.get("Content-Disposition", "")
+        if "filename=" in cd:
+            if match := re.search(r'filename="?([^"]+)"?', cd):
+                return match.group(1)
+        return f"{uid}{mimetypes.guess_extension(content_type) or '.bin'}"
+
+    @staticmethod
+    def _default_download_dir() -> Path:
+        return (
+            Path(os.getenv("XDG_DOWNLOAD_DIR", Path.home() / "Downloads")) / "walacor"
+        )
+
+    # ------------- restored upload helper -------------
+    def _upload_file_with_progress(
+        self,
+        *,
+        path: str | os.PathLike[str],
+        url: str,
+        field_name: str = "file",
+        mime_type: str = "application/octet-stream",
+    ) -> dict[str, Any]:
+        from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+        from tqdm import tqdm
+
+        file_path = Path(path)
+        encoder = MultipartEncoder(
+            {field_name: (file_path.name, file_path.open("rb"), mime_type)}
+        )
+
+        with tqdm(
+            total=encoder.len,
+            unit="B",
+            unit_scale=True,
+            desc=f"Uploading {file_path.name}",
+        ) as bar:
+
+            def on_upload(monitor: MultipartEncoderMonitor) -> None:
+                bar.update(monitor.bytes_read - bar.n)
+                if monitor.bytes_read == encoder.len:
+                    bar.refresh()
+
+            monitor = MultipartEncoderMonitor(encoder, on_upload)
+
+            self.client.authenticate()
+            headers = self.client.get_default_headers(content_type=None)
+            headers["Content-Type"] = monitor.content_type
+
+            try:
+                resp = requests.post(url, data=monitor, headers=headers, timeout=120)
+
+                if resp.status_code == 422:
+                    return cast(dict[str, Any], resp.json())
+
+                resp.raise_for_status()
+
+                if resp.headers.get("content-type", "").startswith("application/json"):
+                    return cast(dict[str, Any], resp.json())
+
+                raise FileRequestError(
+                    f"Expected JSON but server sent {resp.headers.get('content-type')}"
+                )
+
+            except requests.RequestException as exc:
+                logger.exception("Upload failed")
+                raise FileRequestError("upload failed") from exc

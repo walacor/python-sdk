@@ -10,6 +10,8 @@ from walacor_sdk.data_requests.models.data_request_response import (
 )
 from walacor_sdk.data_requests.models.models import SubmissionResult
 
+# ------------------------------> FIXTURES
+
 
 @pytest.fixture
 def mock_client():
@@ -19,6 +21,9 @@ def mock_client():
 @pytest.fixture
 def service(mock_client):
     return DataRequestsService(mock_client)
+
+
+# ------------------------------> INSERT SINGLE RECORD
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -81,6 +86,9 @@ def test_insert_single_record_validation_error(mock_logging, service):
         "SingleDataRequestResponse Validation Error"
         in mock_logging.error.call_args[0][0]
     )
+
+
+# ------------------------------> INSERT MULTIPLE RECORDS
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -157,6 +165,9 @@ def test_insert_multiple_records_validation_error(mock_logging, service):
     )
 
 
+# ------------------------------> UPDATE SINGLE RECORD
+
+
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
 def test_update_single_record_with_UID_success(mock_logging, service):
     """
@@ -193,7 +204,7 @@ def test_update_single_record_with_UID_failure_flag(mock_logging, service):
     result = service.update_single_record_with_UID(record, 123)
 
     assert result is None
-    mock_logging.error.assert_called_with("Failed to insert record")
+    mock_logging.error.assert_called_with("Failed to update record")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -218,6 +229,9 @@ def test_update_single_record_with_UID_validation_error(mock_logging, service):
             "SingleDataRequestResponse Validation Error"
             in mock_logging.error.call_args[0][0]
         )
+
+
+# ------------------------------> UPDATE MULTIPLE RECORDS
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -259,7 +273,7 @@ def test_update_multiple_record_failure_flag(mock_logging, service):
     result = service.update_multiple_record(records, 321)
 
     assert result is None
-    mock_logging.error.assert_called_with("Failed to insert record")
+    mock_logging.error.assert_called_with("Failed to update records")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -310,6 +324,9 @@ def test_update_multiple_record_missing_uid(mock_logging, service):
     mock_logging.error.assert_called_with("UID is required in all records for update")
 
 
+# ------------------------------> GET ALL RECORDS
+
+
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
 def test_get_all_success(mock_logging, service):
     """Test get_all returns list of records when response is valid."""
@@ -349,7 +366,7 @@ def test_get_all_failure_flag(mock_logging, service):
     result = service.get_all(ETId=123)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch all records.")
+    mock_logging.error.assert_called_once_with("Failed to fetch all records")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -369,6 +386,9 @@ def test_get_all_validation_error(mock_logging, service):
             "GetAllRecordsResponse Validation Error"
             in mock_logging.error.call_args[0][0]
         )
+
+
+# ------------------------------> GET SINGLE RECORD
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -417,7 +437,7 @@ def test_get_single_record_by_record_id_failure_flag(mock_logging, service):
     result = service.get_single_record_by_record_id("au321", 42)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch single record.")
+    mock_logging.error.assert_called_once_with("Failed to fetch single record")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -437,6 +457,9 @@ def test_get_single_record_by_record_id_validation_error(mock_logging, service):
             "GetSingleRecordResponse Validation Error"
             in mock_logging.error.call_args[0][0]
         )
+
+
+# ------------------------------> COMPLEX QUERY
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -469,7 +492,7 @@ def test_post_complex_query_failure_flag(mock_logging, service):
     result = service.post_complex_query(ETId=5, pipeline=[])
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch complex query results.")
+    mock_logging.error.assert_called_once_with("Failed to fetch complex query results")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -486,6 +509,9 @@ def test_post_complex_query_validation_error(mock_logging, service):
         assert result is None
         mock_logging.error.assert_called()
         assert "Complex Query Parsing Error" in mock_logging.error.call_args[0][0]
+
+
+# ------------------------------> QUERY API
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -517,7 +543,7 @@ def test_post_query_api_failure_flag(mock_logging, service):
     result = service.post_query_api(ETId=7, payload={"bad": "query"})
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch query results.")
+    mock_logging.error.assert_called_once_with("Failed to fetch query results")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -534,6 +560,9 @@ def test_post_query_api_validation_error(mock_logging, service):
         assert result is None
         mock_logging.error.assert_called()
         assert "QueryApiResponse Validation Error" in mock_logging.error.call_args[0][0]
+
+
+# ------------------------------> QUERY API AGGREGATE
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -570,9 +599,7 @@ def test_post_query_api_aggregate_failure_flag(mock_logging, service):
     result = service.post_query_api_aggregate(payload={})
 
     assert result is None
-    mock_logging.error.assert_called_once_with(
-        "Failed to fetch query aggregate results."
-    )
+    mock_logging.error.assert_called_once_with("Failed to fetch aggregate results")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -594,6 +621,9 @@ def test_post_query_api_aggregate_validation_error(mock_logging, service):
             "QueryApiAggregateResponse Validation Error"
             in mock_logging.error.call_args[0][0]
         )
+
+
+# ------------------------------> COMPLEX MQL
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
@@ -626,9 +656,7 @@ def test_post_complex_MQL_queries_failure_flag(mock_logging, service):
     result = service.post_complex_MQL_queries(ETId=7, pipeline=[])
 
     assert result is None
-    mock_logging.error.assert_called_once_with(
-        "Failed to fetch complex MQL query results."
-    )
+    mock_logging.error.assert_called_once_with("Failed to fetch MQL query results")
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logging")
