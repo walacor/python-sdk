@@ -112,7 +112,7 @@ class IndexEntry(BaseModel):
 
 class CreateFieldRequest(BaseModel):
     FieldName: str
-    DataType: str
+    DataType: FieldType
     Required: bool = False
     MaxLength: int | None = None
 
@@ -135,7 +135,7 @@ class SchemaData(BaseModel):
 
 
 class CreateSchemaDefinition(BaseModel):
-    ETId: int
+    ETId: int = Field(..., ge=10000, description="ETId must be at least 10000")
     TableName: str
     Family: str
     DoSummary: bool = False

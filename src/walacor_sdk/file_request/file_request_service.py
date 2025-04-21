@@ -106,6 +106,10 @@ class FileRequestService(BaseService):
                 "v2/files/store", json=payload.model_dump(by_alias=True)
             )
 
+            if not response_json or not response_json.get("success"):
+                logger.error("File store request failed")
+                raise FileRequestError("store failed")
+
             parsed = StoreFileResponse(**response_json)
             return parsed.data
         except (requests.RequestException, ValidationError) as exc:
@@ -200,6 +204,11 @@ class FileRequestService(BaseService):
 
         try:
             response_json = self._post(query, json=payload, headers=headers)
+
+            if not response_json or not response_json.get("success"):
+                logger.error("List files request failed")
+                raise FileRequestError("list files failed")
+
             parsed = ListFilesResponse(**response_json)
             logger.info("Received %s file(s)", parsed.total)
             return parsed.data
