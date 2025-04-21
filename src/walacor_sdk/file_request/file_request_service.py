@@ -33,8 +33,6 @@ from walacor_sdk.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-__all__ = ["FileRequestError", "DuplicateFileError", "FileRequestService"]
-
 
 class FileRequestService(BaseService):
     # ------------------------------------------------------------------ verify
@@ -44,8 +42,16 @@ class FileRequestService(BaseService):
         """
         Upload *file* for verification and return validated ``FileInfo``.
 
-        :raise FileRequestError:  On network/validation failure.
-        :raise DuplicateFileError: If the backend reports the file already exists.
+        Args:
+            file: File wrapper containing path and metadata.
+            use_progress: Enable tqdm progress bar.
+
+        Returns:
+            :class:`FileInfo` metadata of the verified file.
+
+        Raises:
+            FileRequestError: On network or schema failure.
+            DuplicateFileError: If the backend reports the file already exists.
         """
         logger.info("Verifying file: %s", file.file.path)
 
@@ -83,12 +89,16 @@ class FileRequestService(BaseService):
     # ------------------------------------------------------------------ store
     def store(self, *, file_info: FileInfo) -> StoreFileData:
         """
-        Store previously verified *file_info* in the Walacor backend and return storage metadata.
+        Store a **previously verified** file into Walacor and get back UID/path refs.
 
-        :param file_info: Metadata of the verified file to be stored.
-        :return: Storage metadata as `StoreFileData` including UID, storage path, and references.
+        Args:
+            file_info: Metadata returned from ``verify()``.
 
-        :raise FileRequestError: On failure during API call or response parsing.
+        Returns:
+            :class:`StoreFileData` with UID and location metadata.
+
+        Raises:
+            FileRequestError: On API or response schema failure.
         """
         payload = StoreFileRequest(fileInfo=file_info)
         try:
@@ -105,16 +115,17 @@ class FileRequestService(BaseService):
     # ------------------------------------------------------------------ download
     def download(self, *, uid: str, save_to: str | Path | None = None) -> Path:
         """
-        Download the file identified by *uid* and save it to disk.
+        Download the file identified by *uid* and save it locally.
 
-        :param uid: Unique identifier of the file in Walacor.
-        :param save_to: Optional path or directory to save the downloaded file.
-                        If a filename is included, the file will be saved there.
-                        If only a directory is given or None, the SDK will use metadata to name the file.
+        Args:
+            uid: Unique identifier of the file in Walacor.
+            save_to: Path or directory where file should be saved.
 
-        :return: Path to the downloaded file on local disk.
+        Returns:
+            :class:`Path` to downloaded file.
 
-        :raise FileRequestError: If metadata is missing, download fails, or file cannot be saved.
+        Raises:
+            FileRequestError: If metadata is missing or write fails.
         """
         logger.info("Downloading file UID=%s", uid)
 
@@ -161,17 +172,20 @@ class FileRequestService(BaseService):
         total_req: bool = True,
     ) -> list[FileMetadata]:
         """
-        List files available in the Walacor backend, optionally filtered by UID.
+        List files available in Walacor, optionally filtered by UID.
 
-        :param uid: Optional UID to filter the files.
-        :param page_size: Number of records per page (pagination).
-        :param page_no: Page number for paginated requests.
-        :param from_summary: Whether to retrieve files from the summary view.
-        :param total_req: Whether to include total count in the response.
+        Args:
+            uid: Filter to files matching this UID.
+            page_size: Records per page.
+            page_no: Page index.
+            from_summary: Use summarized file metadata view.
+            total_req: Request total row count.
 
-        :return: List of file metadata entries matching the query.
+        Returns:
+            List of :class:`FileMetadata` entries.
 
-        :raise FileRequestError: If the request fails or response parsing encounters an error.
+        Raises:
+            FileRequestError: If request or response validation fails.
         """
         logger.info("Listing files from server")
 
