@@ -8,3 +8,11 @@ class BadRequestError(Exception):
         self.message = message
         self.code = code
         super().__init__(f"[{reason}] {message}")
+
+
+class FileRequestError(RuntimeError):
+    """Raised when a file‐service operation fails."""
+
+
+class DuplicateFileError(FileRequestError):
+    """Raised when the platform reports the file is a duplicate."""
