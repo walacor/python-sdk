@@ -25,3 +25,4 @@ tests/temp
 .vscode/
 .wercker/
 temp
+main.py

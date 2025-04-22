@@ -34,6 +34,8 @@ dynamic = [
 ]
 dependencies = [
   "requests>=2.20",
+  "pydantic>=2.10",
+
 ]
 
 [project.optional-dependencies]
@@ -51,7 +53,7 @@ Documentation = "https://apidoc.walacor.com"
 Homepage = "https://www.walacor.com"
 
 [tool.ruff]
-src = [ "src/walacor_sdk" ]
+src = [ "src" ]
 
 [tool.ruff.lint]
 extend-select = [
@@ -67,13 +69,13 @@ extend-select = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["walacor_sdk"]
+known-first-party = ["src/walacor_sdk"]
 combine-as-imports = true
 lines-between-types = 1
 
 [tool.isort]
 profile = "black"
-known_first_party = ["walacor_sdk"]
+known_first_party = ["src/walacor_sdk"]
 combine_as_imports = true
 lines_between_types = 1
 
@@ -125,6 +127,16 @@ strict = true
 disallow_any_generics = false
 warn_return_any = false
 disallow_untyped_decorators = false
+ignore_missing_imports = true
+
+
+[[tool.mypy.overrides]]
+module = "requests_toolbelt.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tqdm.*"
+ignore_missing_imports = true
 
 [pyproject-fmt]
 indent = 2

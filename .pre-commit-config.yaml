@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --show-fixes]
-        files: ^walacor_python_sdk/
+        files: ^src/walacor_sdk/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.15.0
@@ -30,6 +30,7 @@ repos:
       - id: mypy
         args: [--strict]
         additional_dependencies:
+          - pydantic
           - types-requests
           - types-setuptools
           - tokenize-rt==3.2.0
