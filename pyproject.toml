@@ -33,7 +33,7 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "requests>=2.20",
+  "requests>=2.32.3",
   "pydantic>=2.10",
 
 ]
