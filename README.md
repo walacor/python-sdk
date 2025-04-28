@@ -40,7 +40,7 @@ pip install -e .
 
 #### From PyPI
 ```bash
-pip install walacor-sdk
+pip install walacor-python-sdk
 ```
 
 ### Configuration
