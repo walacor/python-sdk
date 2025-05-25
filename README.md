@@ -154,6 +154,8 @@ We love PRs! Please open an issue first for large features. All contributions mu
 * Include unit tests with `pytest`.
 * Follow the existing docstring & typing style.
 
+For full contribution details, see 👉 [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ---
 
 ## 📄 License
