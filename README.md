@@ -68,7 +68,7 @@ from walacor_sdk import WalacorService
 wal = WalacorService(
     server="http://[walacor.instance.address/api",
     username="Admin",
-    password="Password!"               
+    password="Password!"
 )
 ```
 
