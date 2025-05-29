@@ -6,6 +6,8 @@ from pydantic import ValidationError
 
 from walacor_sdk.schema.models.models import (
     AutoGenField,
+    CreateFieldRequest,
+    CreateSchemaDefinition,
     IndexEntry,
     IntegerField,
     SchemaDetail,
@@ -19,6 +21,13 @@ from walacor_sdk.schema.models.models import (
 from walacor_sdk.schema.models.schema_request import (
     CreateSchemaRequest,
     SchemaQueryListRequest,
+)
+from walacor_sdk.schema.models.schema_response import (
+    CreateSchemaResponse,
+    GetSchemaDetailResponse,
+    GetSchemaListResponse,
+    SchemaQueryListResponse,
+    SchemaResponse,
 )
 from walacor_sdk.schema.schema_service import SchemaService
 from walacor_sdk.utils.enums import SystemEnvelopeType
@@ -37,13 +46,12 @@ def service(mock_client):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_data_types_success(mock_logging, service):
     """Test successful parsing of get_data_types with valid response."""
-    mock_response = {
-        "success": True,
-        "data": [
-            {"Name": "INTEGER", "DefaultValue": 0, "MinValue": 0, "MaxValue": 100}
-        ],
-    }
-    service._get = MagicMock(return_value=mock_response)
+    mock_response = SchemaResponse(
+        success=True,
+        message="Fetched",
+        data=[IntegerField(Name="INTEGER", DefaultValue=0, MinValue=0, MaxValue=100)],
+    )
+    service._get = MagicMock(return_value=mock_response.model_dump())
 
     result = service.get_data_types()
 
@@ -417,37 +425,39 @@ def test_get_indexes_by_table_name_validation_error(mock_logging, service):
         )
 
 
-# TODO over 100000 add test naming
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_create_schema_success(mock_logging, service):
     """Test create_schema returns parsed SchemaMetadata on valid response."""
     request = CreateSchemaRequest(
         ETId=50,
         SV=1,
-        Schema={
-            "ETId": 12345,
-            "TableName": "MyTable",
-            "Family": "MyFamily",
-            "DoSummary": False,
-            "Fields": [{"FieldName": "field1", "DataType": "TEXT", "Required": True}],
-            "Indexes": [],
-        },
+        Schema=CreateSchemaDefinition(
+            ETId=123456,
+            TableName="MyTable",
+            Family="MyFamily",
+            DoSummary=False,
+            Fields=[
+                CreateFieldRequest(FieldName="field1", DataType="TEXT", Required=True)
+            ],
+            Indexes=[],
+        ),
     )
 
-    mock_response = {
-        "success": True,
-        "data": {
-            "EId": "eid123",
-            "ETId": 50,
-            "SV": 1,
-            "ES": 1,
-            "CreatedAt": 123456,
-            "UpdatedAt": 123456,
-            "UID": ["user1"],
-        },
-    }
+    mock_response = CreateSchemaResponse(
+        success=True,
+        message="ok",
+        data=SchemaMetadata(
+            EId="eid123",
+            ETId=123456,
+            SV=1,
+            ES=1,
+            CreatedAt=123456,
+            UpdatedAt=123456,
+            UID=["user1"],
+        ),
+    )
 
-    service._post = MagicMock(return_value=mock_response)
+    service._post = MagicMock(return_value=mock_response.model_dump())
 
     result = service.create_schema(request)
 
@@ -465,18 +475,20 @@ def test_create_schema_validation_error(mock_logging, service):
     request = CreateSchemaRequest(
         ETId=50,
         SV=1,
-        Schema={
-            "ETId": 12345,
-            "TableName": "MyTable",
-            "Family": "MyFamily",
-            "DoSummary": False,
-            "Fields": [{"FieldName": "field1", "DataType": "TEXT", "Required": True}],
-            "Indexes": [],
-        },
+        Schema=CreateSchemaDefinition(
+            ETId=12345,
+            TableName="MyTable",
+            Family="MyFamily",
+            DoSummary=False,
+            Fields=[
+                CreateFieldRequest(FieldName="field1", DataType="TEXT", Required=True)
+            ],
+            Indexes=[],
+        ),
     )
 
-    service.post = MagicMock(return_value={"success": True, "data": {}})
-
+    invalid_response = {"success": True, "data": {}}
+    service.post = MagicMock(return_value=invalid_response)
     with patch(
         "walacor_sdk.schema.models.schema_response.CreateSchemaResponse",
         side_effect=ValidationError.from_exception_data("CreateSchemaResponse", []),
@@ -493,33 +505,34 @@ def test_create_schema_validation_error(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_schema_details_with_etid_success(mock_logging, service):
     """Test get_schema_details_with_ETId returns SchemaDetail on valid response."""
-    mock_response = {
-        "success": True,
-        "data": {
-            "_id": "abc123",
-            "ETId": 50,
-            "TableName": "MyTable",
-            "Family": "MyFamily",
-            "DoSummary": False,
-            "Fields": [],
-            "Indexes": [],
-            "DbTableName": "tbl",
-            "DbHistoryTableName": "tbl_hist",
-            "SV": 1,
-            "LastModifiedBy": "user",
-            "UID": "uid123",
-            "ORGId": "org1",
-            "SL": "sl",
-            "HashSign": "hash",
-            "HS": "hs",
-            "EId": "eid",
-            "UpdatedAt": 123456,
-            "IsDeleted": False,
-            "CreatedAt": 123456,
-        },
-    }
+    mock_response = GetSchemaDetailResponse(
+        success=True,
+        message="ok",
+        data=SchemaDetail(
+            _id="abc123",
+            ETId=50,
+            TableName="MyTable",
+            Family="MyFamily",
+            DoSummary=False,
+            Fields=[],
+            Indexes=[],
+            DbTableName="tbl",
+            DbHistoryTableName="tbl_hist",
+            SV=1,
+            LastModifiedBy="user",
+            UID="uid123",
+            ORGId="org1",
+            SL="sl",
+            HashSign="hash",
+            HS="hs",
+            EId="eid",
+            UpdatedAt=123456,
+            IsDeleted=False,
+            CreatedAt=123456,
+        ),
+    )
 
-    service._get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response.model_dump(by_alias=True))
 
     result = service.get_schema_details_with_ETId(ETId=50)
 
@@ -615,33 +628,34 @@ def test_get_envelope_types_validation_error(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_details_by_id_success(mock_logging, service):
     """Test get_details_by_id returns SchemaDetail on valid response."""
-    mock_response = {
-        "success": True,
-        "data": {
-            "_id": "abc123",
-            "ETId": 50,
-            "TableName": "MyTable",
-            "Family": "MyFamily",
-            "DoSummary": False,
-            "Fields": [],
-            "Indexes": [],
-            "DbTableName": "tbl",
-            "DbHistoryTableName": "tbl_hist",
-            "SV": 1,
-            "LastModifiedBy": "user",
-            "UID": "uid123",
-            "ORGId": "org1",
-            "SL": "sl",
-            "HashSign": "hash",
-            "HS": "hs",
-            "EId": "eid",
-            "UpdatedAt": 123456,
-            "IsDeleted": False,
-            "CreatedAt": 123456,
-        },
-    }
+    mock_response = GetSchemaDetailResponse(
+        success=True,
+        message="ok",
+        data=SchemaDetail(
+            _id="abc123",
+            ETId=50,
+            TableName="MyTable",
+            Family="MyFamily",
+            DoSummary=False,
+            Fields=[],
+            Indexes=[],
+            DbTableName="tbl",
+            DbHistoryTableName="tbl_hist",
+            SV=1,
+            LastModifiedBy="user",
+            UID="uid123",
+            ORGId="org1",
+            SL="sl",
+            HashSign="hash",
+            HS="hs",
+            EId="eid",
+            UpdatedAt=123456,
+            IsDeleted=False,
+            CreatedAt=123456,
+        ),
+    )
 
-    service._get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response.model_dump(by_alias=True))
 
     result = service.get_details_by_id("abc123")
 
@@ -686,30 +700,31 @@ def test_get_details_by_id_validation_error(mock_logging, service):
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_list_schema_items_success(mock_logging, service):
     """Test get_list_schema_items returns list of SchemaItem on valid response."""
-    mock_response = {
-        "success": True,
-        "data": [
-            {
-                "_id": "618b8002347bcd002179b482",
-                "ORGId": "5dadbc17d52c4ef58fc97f1aaf81bdab1",
-                "ORGName": "Default",
-                "EId": "a04e8bcb-7270-4837-b56c-4980892d6eec",
-                "ETId": 2,
-                "DV": 1,
-                "TableName": "setting",
-                "DbTableName": "2_setting",
-                "DbHistoryTableName": "2_histories",
-                "Family": "system",
-                "DoSummary": True,
-                "Description": "Setting for Organization",
-                "LastModifiedBy": "bbecdf99-f3e4-44d3-b81b-679d845dc993",
-                "CreatedAt": 1636532225380,
-                "UpdatedAt": 1636532225380,
-            },
+    mock_response = GetSchemaListResponse(
+        success=True,
+        message="ok",
+        data=[
+            SchemaItem(
+                _id="618b8002347bcd002179b482",
+                ORGId="5dadbc17d52c4ef58fc97f1aaf81bdab1",
+                ORGName="Default",
+                EId="a04e8bcb-7270-4837-b56c-4980892d6eec",
+                ETId=2,
+                DV=1,
+                TableName="setting",
+                DbTableName="2_setting",
+                DbHistoryTableName="2_histories",
+                Family="system",
+                DoSummary=True,
+                Description="Setting for Organization",
+                LastModifiedBy="bbecdf99-f3e4-44d3-b81b-679d845dc993",
+                CreatedAt=1636532225380,
+                UpdatedAt=1636532225380,
+            )
         ],
-    }
+    )
 
-    service._get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response.model_dump(by_alias=True))
 
     result = service.get_list_schema_items()
 
@@ -763,23 +778,24 @@ def test_get_schema_query_schema_items_success(mock_logging, service):
         endDate="2025-10-12T14:10:17.272Z",
     )
 
-    mock_response = {
-        "success": True,
-        "total": 1,
-        "data": [
-            {
-                "UID": "1c3e1498-2d99-4ee6-b940-d0f7958cdfc9",
-                "schema": "bpm_rules",
-                "ETId": 102,
-                "createdDate": 1739396098164,
-                "Family": "system",
-                "SV": 1,
-                "numberOfFields": 16,
-            }
+    mock_response = SchemaQueryListResponse(
+        success=True,
+        message="Fetched successfully",
+        total=1,
+        data=[
+            SchemaSummary(
+                schema="schemaX",
+                UID="uid123",
+                ETId=102,
+                createdDate=1739396098164,
+                Family="system",
+                SV=1,
+                numberOfFields=5,
+            )
         ],
-    }
+    )
 
-    service._get = MagicMock(return_value=mock_response)
+    service._get = MagicMock(return_value=mock_response.model_dump(by_alias=True))
 
     result = service.get_schema_query_schema_items(query)
 

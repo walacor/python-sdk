@@ -52,6 +52,15 @@ dev = [
 Documentation = "https://apidoc.walacor.com"
 Homepage = "https://www.walacor.com"
 
+[tool.setuptools.package-data]
+"walacor_sdk" = ["py.typed"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.ruff]
 src = [ "src" ]
 
