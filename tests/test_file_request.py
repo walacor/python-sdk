@@ -7,8 +7,13 @@ from requests import RequestException
 
 from walacor_sdk.file_request.file_request_service import FileRequestService
 from walacor_sdk.file_request.models.file_request_request import VerifySingleFileRequest
-from walacor_sdk.file_request.models.models import FileInfo, FileMetadata, VerifyFile
-from walacor_sdk.utils.exceptions import DuplicateFileError, FileRequestError
+from walacor_sdk.file_request.models.models import (
+    DuplicateData,
+    FileInfo,
+    FileMetadata,
+    VerifyFile,
+)
+from walacor_sdk.utils.exceptions import FileRequestError
 
 # ------------------------------> FIXTURES
 
@@ -82,28 +87,32 @@ def test_verify_duplicate_file(
     mock_to_tuple, mock_logger, mock_is_file, mock_exists, service
 ):
     """Test verify raises DuplicateFileError when duplicateData is returned."""
+
     file_request = VerifySingleFileRequest(
         path="/fake/sample.pdf", mimetype="application/pdf"
     )
     mock_to_tuple.return_value = ("file", ("sample.pdf", b"data", "application/pdf"))
 
-    mock_response = {
-        "duplicateData": {
-            "EId": "eid456",
-            "UID": ["dupe123"],
-            "DH": "hash==",
-            "CreatedAt": 1710000000,
-            "Signature": "signature123",
-            "SignatureType": "SHA256",
-        }
-    }
+    duplicate_data_model = DuplicateData(
+        EId="eid456",
+        UID=["dupe123"],
+        DH="hash==",
+        CreatedAt=1710000000,
+        Signature="signature123",
+        SignatureType="SHA256",
+    )
+
+    mock_response = {"duplicateData": duplicate_data_model.model_dump(by_alias=True)}
 
     service._post = MagicMock(return_value=mock_response)
 
-    with pytest.raises(DuplicateFileError) as exc:
-        service.verify(file=file_request)
+    result = service.verify(file=file_request)
 
-    assert "Duplicate file detected" in str(exc.value)
+    assert isinstance(result, DuplicateData)
+    assert result.eid == "eid456"
+    assert result.uid == ["dupe123"]
+    assert result.dh == "hash=="
+    assert result.signature == "signature123"
     mock_logger.exception.assert_not_called()
 
 

@@ -46,6 +46,13 @@ dev = [
   "pre-commit",
   "tox"
 ]
+
+data-science = [
+  "pandas>=2.0",
+  "pyarrow>=14",
+  "numpy>=1.26"
+]
+
 [tool.setuptools_scm]
 
 [project.urls]
