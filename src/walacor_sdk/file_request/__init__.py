@@ -13,10 +13,7 @@ from .models.file_request_response import (
     StoreFileResponse,
     VerifyResponse,
 )
-from .models.models import (
-    FileItem,
-    FileMetadata,
-)
+from .models.models import FileInfo, FileItem, FileMetadata
 
 __all__: list[str] = [
     "FileRequestService",
@@ -28,6 +25,7 @@ __all__: list[str] = [
     "FileItem",
     "FileMetadata",
     "models",
+    "FileInfo",
 ]
 
 
