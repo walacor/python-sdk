@@ -4,6 +4,7 @@ import mimetypes
 import os
 import re
 
+from io import BytesIO
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urljoin
@@ -25,10 +26,12 @@ from walacor_sdk.file_request.models.file_request_response import (
 from walacor_sdk.file_request.models.models import (
     DuplicateData,
     FileInfo,
+    FileItem,
     FileMetadata,
+    MemoryFileItem,
     StoreFileData,
 )
-from walacor_sdk.utils.exceptions import DuplicateFileError, FileRequestError
+from walacor_sdk.utils.exceptions import FileRequestError
 from walacor_sdk.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +41,7 @@ class FileRequestService(BaseService):
     # ------------------------------------------------------------------ verify
     def verify(
         self, *, file: VerifySingleFileRequest, use_progress: bool = False
-    ) -> FileInfo:
+    ) -> FileInfo | DuplicateData:
         """
         Upload *file* for verification and return validated ``FileInfo``.
 
@@ -53,15 +56,17 @@ class FileRequestService(BaseService):
             FileRequestError: On network or schema failure.
             DuplicateFileError: If the backend reports the file already exists.
         """
-        logger.info("Verifying file: %s", file.file.path)
+        logger.info("Verifying")
+        is_mem = isinstance(file.file, MemoryFileItem)
 
         try:
-            if use_progress:
+            if use_progress and not is_mem:
+                file_item = cast(FileItem, file.file)
                 response_json = self._upload_file_with_progress(
-                    path=str(file.file.path),
+                    path=str(file_item.path),
                     url=urljoin(self.client.base_url, "api/v2/files/verify"),
                     field_name="file",
-                    mime_type=file.file.mimetype,
+                    mime_type=file_item.mimetype,
                 )
             else:
                 response_json = self._post(
@@ -74,17 +79,31 @@ class FileRequestService(BaseService):
 
             if "duplicateData" in response_json:
                 dup = DuplicateData(**response_json["duplicateData"])
-                raise DuplicateFileError(
-                    f"Duplicate file detected (UID={dup.uid[0]}, EId={dup.eid})"
-                )
+                return dup
 
             raise FileRequestError("Unexpected verification response structure.")
 
-        except DuplicateFileError:
-            raise
         except (requests.RequestException, ValidationError) as exc:
             logger.exception("File verification failed")
             raise FileRequestError("verification failed") from exc
+
+    def verify_in_memory(self, obj: Any, /, **kw: Any) -> FileInfo | DuplicateData:
+        """
+        Verify an in-memory pandas.DataFrame or numpy.ndarray.
+        """
+        if self.is_dataframe(obj):
+            buf, name, mime = self.serialize_dataframe(obj, **kw)
+        elif self.is_ndarray(obj):
+            buf, name, mime = self.serialize_ndarray(obj, **kw)
+        else:
+            raise TypeError(
+                "verify_in_memory() accepts pandas.DataFrame or numpy.ndarray"
+            )
+
+        item = MemoryFileItem(buf, name=name, mimetype=mime)
+        request = VerifySingleFileRequest.from_memory(item)
+
+        return self.verify(file=request, use_progress=False)
 
     # ------------------------------------------------------------------ store
     def store(self, *, file_info: FileInfo) -> StoreFileData:
@@ -306,3 +325,40 @@ class FileRequestService(BaseService):
             except requests.RequestException as exc:
                 logger.exception("Upload failed")
                 raise FileRequestError("upload failed") from exc
+
+    def serialize_dataframe(
+        self, df: Any, *, fmt: str = "parquet", name: str | None = None, **kw: Any
+    ) -> tuple[BytesIO, str, str]:
+
+        buf = BytesIO()
+        if fmt == "csv":
+            df.to_csv(buf, index=False, **kw)
+            mime = "text/csv"
+            filename = name or "data.csv"
+        else:
+            df.to_parquet(buf, **kw)
+            mime = "application/x-parquet"
+            filename = name or "data.parquet"
+        buf.seek(0)
+        return buf, filename, mime
+
+    def serialize_ndarray(
+        self, arr: Any, *, name: str = "array.npy", **kw: Any
+    ) -> tuple[BytesIO, str, str]:
+        try:
+            import numpy as np
+        except ModuleNotFoundError as err:
+            raise ImportError(
+                "ndarray support requires NumPy. Run:  pip install numpy"
+            ) from err
+
+        buf = BytesIO()
+        np.save(buf, arr, **kw)
+        buf.seek(0)
+        return buf, name, "application/octet-stream"
+
+    def is_dataframe(self, x: Any) -> bool:
+        return hasattr(x, "to_parquet") and hasattr(x, "to_csv")
+
+    def is_ndarray(self, x: Any) -> bool:
+        return hasattr(x, "shape") and hasattr(x, "dtype")

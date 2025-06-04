@@ -86,3 +86,17 @@ class FileMetadata(BaseModel):
     CreatedAt: int
     IsDeleted: bool
     Status: str
+
+
+class MemoryFileItem:
+
+    def __init__(self, buffer: IO[bytes], *, name: str, mimetype: str | None = None):
+        self._buffer = buffer
+        self.name = name
+        self.mimetype = (
+            mimetype or mimetypes.guess_type(name)[0] or "application/octet-stream"
+        )
+
+    def to_tuple(self) -> tuple[str, tuple[str, IO[bytes], str]]:
+        self._buffer.seek(0)
+        return ("file", (self.name, self._buffer, self.mimetype))
