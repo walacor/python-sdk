@@ -3,25 +3,36 @@ import types
 from importlib import import_module
 from typing import TYPE_CHECKING
 
+# Schema model types
 from .models.models import (
     ArrayField,
+    AutoGenField,
     BooleanField,
+    CreateFieldRequest,
+    CreateIndexRequest,
     CreateSchemaDefinition,
     CronField,
     DatetimeField,
     DecimalField,
     IndexEntry,
     IntegerField,
+    SchemaDetail,
+    SchemaEntry,
+    SchemaItem,
+    SchemaMetadata,
+    SchemaSummary,
+    SchemaType,
+    SchemaVersionEntry,
     TextField,
 )
 from .models.schema_request import (
     CreateSchemaRequest,
     SchemaQueryListRequest,
 )
-from .schema_service import SchemaService
 
-__all__: list[str] = [
-    "SchemaService",
+__all__ = [
+    "CreateFieldRequest",
+    "CreateIndexRequest",
     "CreateSchemaDefinition",
     "CreateSchemaRequest",
     "SchemaQueryListRequest",
@@ -32,7 +43,15 @@ __all__: list[str] = [
     "DatetimeField",
     "ArrayField",
     "CronField",
+    "AutoGenField",
     "IndexEntry",
+    "SchemaDetail",
+    "SchemaEntry",
+    "SchemaItem",
+    "SchemaMetadata",
+    "SchemaSummary",
+    "SchemaType",
+    "SchemaVersionEntry",
     "models",
 ]
 
