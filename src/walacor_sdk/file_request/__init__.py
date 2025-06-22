@@ -7,16 +7,29 @@ from .models.file_request_request import (
     StoreFileRequest,
     VerifySingleFileRequest,
 )
-from .models.models import DuplicateData, FileInfo, FileItem, FileMetadata
+from .models.models import (
+    DuplicateData,
+    FileInfo,
+    FileInfoWrapper,
+    FileItem,
+    FileMetadata,
+    MemoryFileItem,
+    StoreFileData,
+    VerifyFile,
+)
 
 __all__: list[str] = [
     "VerifySingleFileRequest",
     "StoreFileRequest",
     "FileItem",
+    "MemoryFileItem",
     "FileMetadata",
-    "models",
     "FileInfo",
+    "FileInfoWrapper",
+    "StoreFileData",
+    "VerifyFile",
     "DuplicateData",
+    "models",
 ]
 
 
