@@ -3,29 +3,33 @@ import types
 from importlib import import_module
 from typing import TYPE_CHECKING
 
-from .file_request_service import FileRequestService
 from .models.file_request_request import (
     StoreFileRequest,
     VerifySingleFileRequest,
 )
-from .models.file_request_response import (
-    ListFilesResponse,
-    StoreFileResponse,
-    VerifyResponse,
+from .models.models import (
+    DuplicateData,
+    FileInfo,
+    FileInfoWrapper,
+    FileItem,
+    FileMetadata,
+    MemoryFileItem,
+    StoreFileData,
+    VerifyFile,
 )
-from .models.models import FileInfo, FileItem, FileMetadata
 
 __all__: list[str] = [
-    "FileRequestService",
     "VerifySingleFileRequest",
     "StoreFileRequest",
-    "VerifyResponse",
-    "StoreFileResponse",
-    "ListFilesResponse",
     "FileItem",
+    "MemoryFileItem",
     "FileMetadata",
-    "models",
     "FileInfo",
+    "FileInfoWrapper",
+    "StoreFileData",
+    "VerifyFile",
+    "DuplicateData",
+    "models",
 ]
 
 
