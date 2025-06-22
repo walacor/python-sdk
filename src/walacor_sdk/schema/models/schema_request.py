@@ -7,8 +7,8 @@ from walacor_sdk.schema.models.models import CreateSchemaDefinition
 
 
 class CreateSchemaRequest(BaseModel):
-    ETId: int
-    SV: int
+    ETId: int = Field(default=50)
+    SV: int = Field(default=1)
     Schema: CreateSchemaDefinition
 
 
