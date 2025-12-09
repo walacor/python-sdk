@@ -12,7 +12,11 @@ from requests.exceptions import (
     RequestException,
 )
 
-from walacor_sdk.utils.exceptions import APIConnectionError, BadRequestError
+from walacor_sdk.utils.exceptions import (
+    APIConnectionError,
+    BadRequestError,
+    InternalServerError,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -32,35 +36,51 @@ def global_exception_handler(func: F) -> F:
         except HTTPError as http_err:
             response = getattr(http_err, "response", None)
             if response is not None:
-                if response.status_code == 400:
-                    content = (
-                        response.content.decode("utf-8")
-                        if isinstance(response.content, bytes)
-                        else str(response.content)
-                    )
+                status = response.status_code
 
-                    error_data = json.loads(content)
-                    error_reason = error_data.get("errors", [{}])[0].get(
-                        "reason", "UnknownReason"
-                    )
-                    error_message = error_data.get("errors", [{}])[0].get(
-                        "message", "Unknown error message."
-                    )
-                    raise BadRequestError(error_reason, error_message, 400) from None
-                else:
-                    logging.error(
-                        "Unhandled HTTP error: %s %s",
-                        response.status_code,
-                        response.reason,
-                    )
-                    raise APIConnectionError(
-                        f"HTTP Error {response.status_code}: {response.reason}"
+                content = (
+                    response.content.decode("utf-8")
+                    if isinstance(response.content, bytes | bytearray)
+                    else str(response.content)
+                )
+
+                error_reason = "UnknownReason"
+                error_message = "Unknown error message."
+
+                try:
+                    maybe_json = json.loads(content)
+                    if isinstance(maybe_json, dict):
+                        errors = maybe_json.get("errors", [{}])
+                        first = errors[0] if errors else {}
+                        if isinstance(first, dict):
+                            error_reason = first.get("reason", error_reason)
+                            error_message = first.get("message", error_message)
+                except json.JSONDecodeError:
+                    pass
+
+                if status == 400:
+                    raise BadRequestError(error_reason, error_message, status) from None
+
+                if status == 500:
+                    raise InternalServerError(
+                        error_reason,
+                        error_message,
+                        status,
                     ) from None
-            else:
-                logging.error("HTTPError raised without response attached.")
+
+                logging.error(
+                    "Unhandled HTTP error: %s %s",
+                    status,
+                    response.reason,
+                )
                 raise APIConnectionError(
-                    "HTTP error occurred with no response attached."
+                    f"HTTP Error {status}: {response.reason}"
                 ) from None
+
+            logging.error("HTTPError raised without response attached.")
+            raise APIConnectionError(
+                "HTTP error occurred with no response attached."
+            ) from None
 
         except RequestException as req_err:
             logging.error("HTTP request failed: %s", req_err)
