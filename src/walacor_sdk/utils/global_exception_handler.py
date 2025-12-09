@@ -56,12 +56,25 @@ def global_exception_handler(func: F) -> F:
                             error_reason = first.get("reason", error_reason)
                             error_message = first.get("message", error_message)
                 except json.JSONDecodeError:
+                    # Not JSON – keep defaults
                     pass
 
                 if status == 400:
+                    logging.error(
+                        "HTTP 400 from %s: [%s] %s",
+                        func.__name__,
+                        error_reason,
+                        error_message,
+                    )
                     raise BadRequestError(error_reason, error_message, status) from None
 
                 if status == 500:
+                    logging.error(
+                        "HTTP 500 from %s: [%s] %s",
+                        func.__name__,
+                        error_reason,
+                        error_message,
+                    )
                     raise InternalServerError(
                         error_reason,
                         error_message,
