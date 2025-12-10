@@ -14,5 +14,13 @@ class FileRequestError(RuntimeError):
     """Raised when a file‐service operation fails."""
 
 
+class InternalServerError(Exception):
+    def __init__(self, reason: str, message: str, code: int = 500):
+        self.reason = reason
+        self.message = message
+        self.code = code
+        super().__init__(f"[{reason}] {message}")
+
+
 class DuplicateFileError(FileRequestError):
     """Raised when the platform reports the file is a duplicate."""
