@@ -40,7 +40,6 @@ class W_Client:
         if not self._token:
             raise APIConnectionError("Authentication succeeded but no token returned.")
 
-    @global_exception_handler
     def request(
         self,
         method: str,

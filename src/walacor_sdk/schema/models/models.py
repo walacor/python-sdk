@@ -204,15 +204,15 @@ class SchemaItem(BaseModel):
     ORGName: str
     EId: str
     ETId: int
+    SV: int | None = None
     TableName: str
     DbTableName: str
     DbHistoryTableName: str
-    Family: str
+    Family: str | None = None
     DoSummary: bool
     LastModifiedBy: str
     CreatedAt: int
     UpdatedAt: int
-    DV: int | None = None
     Description: str | None = ""
 
 

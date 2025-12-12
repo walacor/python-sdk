@@ -710,7 +710,7 @@ def test_get_list_schema_items_success(mock_logging, service):
                 ORGName="Default",
                 EId="a04e8bcb-7270-4837-b56c-4980892d6eec",
                 ETId=2,
-                DV=1,
+                SV=1,
                 TableName="setting",
                 DbTableName="2_setting",
                 DbHistoryTableName="2_histories",
