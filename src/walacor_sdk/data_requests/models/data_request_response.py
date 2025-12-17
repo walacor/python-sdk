@@ -20,7 +20,7 @@ class GetSingleRecordResponse(BaseResponse[list[dict[str, Any]]]):
     pass
 
 
-class GetComplexQueryResponse(BaseResponse[list[dict[str, str]]]):
+class GetComplexQueryResponse(BaseResponse[list[dict[str, Any]]]):
     Total: int = Field(..., alias="total")
 
 
@@ -28,9 +28,9 @@ class QueryApiResponse(BaseResponse[list[str]]):
     pass
 
 
-class QueryApiAggregateResponse(BaseResponse[list[dict[str, str]]]):
+class QueryApiAggregateResponse(BaseResponse[list[dict[str, Any]]]):
     Total: int = Field(..., alias="total")
 
 
-class GetComplexQMLQueryResponse(BaseResponse[list[dict[str, str]]]):
+class GetComplexQMLQueryResponse(BaseResponse[list[dict[str, Any]]]):
     Total: int = Field(..., alias="total")
