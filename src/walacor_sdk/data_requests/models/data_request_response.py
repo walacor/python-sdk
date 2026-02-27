@@ -24,7 +24,7 @@ class GetComplexQueryResponse(BaseResponse[list[dict[str, Any]]]):
     Total: int = Field(..., alias="total")
 
 
-class QueryApiResponse(BaseResponse[list[str]]):
+class QueryApiResponse(BaseResponse[list[dict[str, Any]]]):
     pass
 
 
