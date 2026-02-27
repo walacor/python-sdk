@@ -230,7 +230,7 @@ class DataRequestsService(BaseService):
     # ------------------------------------------------------------------ READ – complex/aggregate
 
     def post_complex_query(
-        self, ETId: int, pipeline: list[dict[str, Any]]
+        self, ETId: int, pipeline: list[dict[str, Any]], fromSummary: bool = False,
     ) -> ComplexQueryRecords | None:
         """Run an arbitrary Mongo‑style aggregation *pipeline* (``getcomplex``).
 
@@ -242,7 +242,8 @@ class DataRequestsService(BaseService):
             :class:`ComplexQueryRecords` or ``None`` on failure.
         """
         header = {"ETId": str(ETId)}
-        response = self._post("query/getcomplex", headers=header, json=pipeline)
+        query = f"query/getcomplex?fromSummary={'true' if fromSummary else 'false'}"
+        response = self._post(query, headers=header, json=pipeline)
 
         if not response or not response.get("success"):
             logger.error("Failed to fetch complex query results")
@@ -264,6 +265,7 @@ class DataRequestsService(BaseService):
         schemaVersion: int = 1,
         pageNumber: int = 1,
         pageSize: int = 0,
+        fromSummary: bool = False
     ) -> list[str] | None:
         """Endpoint helper for the simplified *query API*.
 
@@ -278,7 +280,7 @@ class DataRequestsService(BaseService):
             Raw JSON *strings* returned by the platform or ``None``.
         """
         headers = {"ETId": str(ETId), "SV": str(schemaVersion)}
-        query = f"query/get?pageNo={pageNumber}&pageSize={pageSize}"
+        query = f"query/get?pageNo={pageNumber}&pageSize={pageSize}&fromSummary={'true' if fromSummary else 'false'}"
         response = self._post(query, headers=headers, json=payload)
 
         if not response or not response.get("success"):
@@ -298,6 +300,7 @@ class DataRequestsService(BaseService):
         ETId: int = 10,
         schemaVersion: int = 1,
         dataVersion: int = 1,
+        fromSummary: bool = False
     ) -> QueryApiAggregate | None:
         """Wrapper for *query/getComplex* when using the **aggregate** flavour.
 
@@ -315,7 +318,9 @@ class DataRequestsService(BaseService):
             "SV": str(schemaVersion),
             "DV": str(dataVersion),
         }
-        response = self._post("query/getComplex", headers=headers, json=payload)
+
+        query = f"query/getComplex?fromSummary={'true' if fromSummary else 'false'}"
+        response = self._post(query, headers=headers, json=payload)
 
         if not response or not response.get("success"):
             logger.error("Failed to fetch aggregate results")
@@ -334,6 +339,7 @@ class DataRequestsService(BaseService):
         self,
         pipeline: list[dict[str, Any]],
         ETId: int,
+        fromSummary: bool = False
     ) -> ComplexQMLQueryRecords | None:
         """Pass‑through helper for advanced *MQL* pipelines.
 
@@ -345,7 +351,8 @@ class DataRequestsService(BaseService):
             :class:`ComplexQMLQueryRecords` or ``None``.
         """
         header = {"ETId": str(ETId)}
-        response = self._post("query/getcomplex", headers=header, json=pipeline)
+        query = f"query/getcomplex?fromSummary={'true' if fromSummary else 'false'}"
+        response = self._post(query, headers=header, json=pipeline)
 
         if not response or not response.get("success"):
             logger.error("Failed to fetch MQL query results")
