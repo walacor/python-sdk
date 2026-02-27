@@ -271,6 +271,7 @@ class DataRequestsService(BaseService):
 
         Args:
             ETId: Envelope‑type ID.
+            payload: Query filter object (see Walacor docs).
             schemaVersion: `SV` header value – defaults to latest (``1``).
             pageNumber: 1‑based index of the page to retrieve.
             pageSize: Number of rows per page (``0`` = no limit).
