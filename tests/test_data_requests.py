@@ -479,7 +479,7 @@ def test_post_complex_query_success(mock_logging, service):
         assert result.Total == 1
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getcomplex",
+            "query/getcomplex?fromSummary=false",
             headers={"ETId": "101"},
             json=[{"match": "criteria"}],
         )
@@ -530,7 +530,7 @@ def test_post_query_api_success(mock_logging, service):
 
         assert result == ["row1", "row2"]
         service._post.assert_called_once_with(
-            "query/get?pageNo=1&pageSize=0",
+            "query/get?pageNo=1&pageSize=0&fromSummary=false",
             headers={"ETId": "22", "SV": "1"},
             json={"some": "query"},
         )
@@ -586,7 +586,7 @@ def test_post_query_api_aggregate_success(mock_logging, service):
         assert result.Total == 3
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getComplex",
+            "query/getComplex?fromSummary=false",
             headers={"ETId": "10", "SV": "1", "DV": "1"},
             json={"agg": "test"},
         )
@@ -645,7 +645,7 @@ def test_post_complex_MQL_queries_success(mock_logging, service):
         assert result.Total == 99
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getcomplex", headers={"ETId": "77"}, json=[{"stage": "match"}]
+            "query/getcomplex?fromSummary=false", headers={"ETId": "77"}, json=[{"stage": "match"}]
         )
         mock_logging.error.assert_not_called()
 
