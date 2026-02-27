@@ -40,25 +40,29 @@ class DataRequestsService(BaseService):
         Args:
             jsonRecord: Raw *JSON string* representing one record that matches the
                 destination schema.
-            ETId: Envelope‑type ID of the destination table.
+            ETId: Envelope-type ID of the destination table.
 
         Returns:
-            A :class:`~walacor_sdk.data_requests.models.models.SubmissionResult` if
-            the backend confirms success; otherwise ``None``.
+            A SubmissionResult if the backend confirms success; otherwise None.
+            (Error details are logged globally by BaseService.)
         """
         record = {"Data": [jsonRecord]}
         header = {"ETId": str(ETId)}
-        response = self._post("envelopes/submit", json=record, headers=header)
 
-        if not response or not response.get("success"):
-            logger.error("Failed to insert record")
+        raw = self._post("envelopes/submit", json=record, headers=header)
+
+        # NEW: centralized handling (logs backend errors; may raise if client.raise_on_error=True)
+        response = self._handle_response(raw, action="insert_single_record")
+        if response is None:
             return None
 
         try:
-            parsed_response = SingleDataRequestResponse(**response)
-            return parsed_response.data
+            parsed = SingleDataRequestResponse(**response)
+            return parsed.data
         except ValidationError as e:
-            logger.error("SingleDataRequestResponse Validation Error: %s", e)
+            logger.error(
+                "SingleDataRequestResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     def insert_multiple_records(
