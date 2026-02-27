@@ -532,6 +532,7 @@ def test_post_query_api_success(mock_logging, service):
         service._post.assert_called_once_with(
             "query/get?pageNo=0&pageSize=0&fromSummary=true",
             headers={"ETId": "22", "SV": "1"},
+            json=None,
         )
         mock_logging.error.assert_not_called()
 

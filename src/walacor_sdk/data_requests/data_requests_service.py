@@ -261,6 +261,7 @@ class DataRequestsService(BaseService):
     def post_query_api(
         self,
         ETId: int,
+        payload: list[dict[str, Any]] | None = None,
         schemaVersion: int = 1,
         pageNumber: int = 0,
         pageSize: int = 0,
@@ -280,7 +281,7 @@ class DataRequestsService(BaseService):
         """
         headers = {"ETId": str(ETId), "SV": str(schemaVersion)}
         query = f"query/get?pageNo={pageNumber}&pageSize={pageSize}&fromSummary={'true' if fromSummary else 'false'}"
-        response = self._post(query, headers=headers)
+        response = self._post(query, headers=headers, json=payload)
 
         if not response or not response.get("success"):
             logger.error("Failed to fetch query results")
