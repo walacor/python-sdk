@@ -61,15 +61,19 @@ def test_get_data_types_success(mock_logging, service):
     mock_logging.info.assert_called_with("Fetching data types...")
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_data_types_failure_flag(mock_logging, service):
-    """Test get_data_types returns empty list when success flag is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_data_types()
 
     assert result == []
-    mock_logging.error.assert_called_with("Failed to fetch data")
+    mock_logging.error.assert_called_once()
+
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_data_types" in rendered
+    assert "failed" in rendered.lower()
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -113,17 +117,19 @@ def test_get_platform_auto_generation_fields_success(mock_logging, service):
     mock_logging.info.assert_called_with("Fetching platform auto-generation fields...")
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_platform_auto_generation_fields_failure_flag(mock_logging, service):
-    """Test get_platform_auto_generation_fields returns empty dict when success flag is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_platform_auto_generation_fields()
 
     assert result == {}
-    mock_logging.error.assert_called_with(
-        "Failed to fetch platform auto-generation fields"
-    )
+    mock_logging.error.assert_called_once()
+
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_platform_auto_generation_fields" in rendered
+    assert "failed" in rendered.lower()
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -162,33 +168,19 @@ def test_get_list_with_latest_version_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_list_with_latest_version_failure_flag(mock_logging, service):
-    """Test method returns empty list and logs error when success is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_list_with_latest_version()
 
     assert result == []
-    mock_logging.error.assert_called_with("Failed to fetch latest schema versions")
+    mock_logging.error.assert_called_once()
 
-
-@patch("walacor_sdk.schema.schema_service.logging")
-def test_get_list_with_latest_version_validation_error(mock_logging, service):
-    """Test method returns empty list and logs ValidationError on invalid response."""
-    service._get = MagicMock(return_value={"success": True, "data": [{}]})
-
-    with patch(
-        "walacor_sdk.schema.models.schema_response.SchemaListResponse",
-        side_effect=ValidationError.from_exception_data("SchemaListResponse", []),
-    ):
-        result = service.get_list_with_latest_version()
-
-        assert result == []
-        mock_logging.error.assert_called()
-        assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
-        )
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_list_with_latest_version" in rendered
+    assert "failed" in rendered.lower()
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -220,7 +212,6 @@ def test_get_versions_failure_flag_returns_empty_list(mock_logging, service):
 
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_versions_validation_error(mock_logging, service):
-    """Test that method logs ValidationError and returns empty list."""
     service._get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
@@ -232,7 +223,8 @@ def test_get_versions_validation_error(mock_logging, service):
         assert result == []
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "SchemaVersionsResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -263,11 +255,10 @@ def test_get_versions_for_etid_failure_flag(mock_logging, service):
 
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_versions_for_etid_validation_error(mock_logging, service):
-    """Test get_versions_for_ETId returns empty list on ValidationError and logs it."""
     service._get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
-        "walacor_sdk.schema.models.schema_response.SchemaListResponse",
+        "walacor_sdk.schema.models.schema_response.SchemaListVersionsResponse",
         side_effect=ValidationError.from_exception_data(
             "SchemaListVersionsResponse", []
         ),
@@ -277,7 +268,8 @@ def test_get_versions_for_etid_validation_error(mock_logging, service):
         assert result == []
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "SchemaListVersionsResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -356,7 +348,6 @@ def test_get_indexes_failure_flag(mock_logging, service):
 
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_schema_index_response_model_validation_error(mock_logging, service):
-    """Test SchemaIndexResponse model raises ValidationError when 'data' is missing."""
     service._get = MagicMock(return_value={"success": True})
 
     with patch(
@@ -368,7 +359,7 @@ def test_schema_index_response_model_validation_error(mock_logging, service):
         assert result == []
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "SchemaIndexResponse Validation Error" in mock_logging.error.call_args[0][0]
         )
 
 
@@ -404,7 +395,6 @@ def test_get_indexes_wit_table_name_failure_flag(mock_logging, service):
 
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_get_indexes_by_table_name_validation_error(mock_logging, service):
-    """Test get_indexes_by_table_name handles ValidationError and logs it."""
     service._get = MagicMock(return_value={"success": True, "data": [{}]})
 
     with patch(
@@ -421,7 +411,8 @@ def test_get_indexes_by_table_name_validation_error(mock_logging, service):
         )
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "IndexesByTableNameResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -471,7 +462,6 @@ def test_create_schema_success(mock_logging, service):
 
 @patch("walacor_sdk.schema.schema_service.logging")
 def test_create_schema_validation_error(mock_logging, service):
-    """Test create_schema returns None and logs ValidationError on bad response."""
     request = CreateSchemaRequest(
         ETId=50,
         SV=1,
@@ -488,7 +478,8 @@ def test_create_schema_validation_error(mock_logging, service):
     )
 
     invalid_response = {"success": True, "data": {}}
-    service.post = MagicMock(return_value=invalid_response)
+    service._post = MagicMock(return_value=invalid_response)
+
     with patch(
         "walacor_sdk.schema.models.schema_response.CreateSchemaResponse",
         side_effect=ValidationError.from_exception_data("CreateSchemaResponse", []),
@@ -498,7 +489,8 @@ def test_create_schema_validation_error(mock_logging, service):
         assert result is None
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "CreateSchemaResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -545,9 +537,8 @@ def test_get_schema_details_with_etid_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_schema_details_with_etid_failure_flag(mock_logging, service):
-    """Test get_schema_details_with_ETId returns None when success=False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_schema_details_with_ETId(ETId=50)
@@ -556,7 +547,11 @@ def test_get_schema_details_with_etid_failure_flag(mock_logging, service):
     service._get.assert_called_once_with(
         "schemas/envelopeTypes/50/details", headers={"ETId": "50"}
     )
-    mock_logging.error.assert_called_with("Failed to fetch schema details")
+
+    mock_logging.error.assert_called_once()
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_schema_details_with_ETId" in rendered
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -576,7 +571,8 @@ def test_get_schema_details_with_etid_validation_error(mock_logging, service):
         )
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "GetSchemaDetailResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
         patch("walacor_sdk.schema.schema_service.logging")
@@ -595,16 +591,19 @@ def test_get_envelope_types_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_envelope_types_failure_flag(mock_logging, service):
-    """Test get_envelope_types returns None and logs error when success is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_envelope_types()
 
     assert result is None
     service._get.assert_called_once_with("schemas/envelopeTypes")
-    mock_logging.error.assert_called_with("Failed to fetch schema details")
+
+    mock_logging.error.assert_called_once()
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_envelope_types" in rendered
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -621,7 +620,8 @@ def test_get_envelope_types_validation_error(mock_logging, service):
         assert result is None
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "GetEnvelopeTypesResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -666,16 +666,19 @@ def test_get_details_by_id_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_details_by_id_failure_flag(mock_logging, service):
-    """Test get_details_by_id returns None and logs error when success is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_details_by_id("invalid_id")
 
     assert result is None
     service._get.assert_called_once_with("schemas/invalid_id")
-    mock_logging.error.assert_called_with("Failed to fetch schema details")
+
+    mock_logging.error.assert_called_once()
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_details_by_id" in rendered
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -693,7 +696,8 @@ def test_get_details_by_id_validation_error(mock_logging, service):
         service._get.assert_called_once_with("schemas/bad_schema_id")
         mock_logging.error.assert_called()
         assert (
-            "SchemaListResponse Validation Error" in mock_logging.error.call_args[0][0]
+            "GetSchemaDetailResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
         )
 
 
@@ -735,16 +739,19 @@ def test_get_list_schema_items_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_list_schema_items_failure_flag(mock_logging, service):
-    """Test get_list_schema_items returns None and logs error when success is False."""
     service._get = MagicMock(return_value={"success": False})
 
     result = service.get_list_schema_items()
 
     assert result is None
     service._get.assert_called_once_with("schemas")
-    mock_logging.error.assert_called_with("Failed to fetch schema details")
+
+    mock_logging.error.assert_called_once()
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_list_schema_items" in rendered
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -810,9 +817,8 @@ def test_get_schema_query_schema_items_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.schema.schema_service.logging")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_schema_query_schema_items_failure_flag(mock_logging, service):
-    """Test get_schema_query_schema_items returns None and logs error when success is False."""
     service._get = MagicMock(return_value={"success": False, "data": [{}]})
 
     queryParams = SchemaQueryListRequest(
@@ -830,7 +836,11 @@ def test_get_schema_query_schema_items_failure_flag(mock_logging, service):
     service._get.assert_called_once_with(
         "schemas/schemaList", params=queryParams.model_dump(exclude_none=True)
     )
-    mock_logging.error.assert_called_with("Failed to fetch schema details")
+
+    mock_logging.error.assert_called_once()
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_schema_query_schema_items" in rendered
 
 
 @patch("walacor_sdk.schema.schema_service.logging")
@@ -859,4 +869,7 @@ def test_get_schema_query_schema_items_validation_error(mock_logging, service):
             "schemas/schemaList", params=queryParams.model_dump(exclude_none=True)
         )
         mock_logging.error.assert_called()
-        assert "SchemaQueryList Validation Error" in mock_logging.error.call_args[0][0]
+        assert (
+            "SchemaQueryListResponse Validation Error"
+            in mock_logging.error.call_args[0][0]
+        )

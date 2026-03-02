@@ -1,5 +1,3 @@
-from typing import cast
-
 from pydantic import ValidationError
 
 from walacor_sdk.base.base_service import BaseService
@@ -51,16 +49,17 @@ class SchemaService(BaseService):
             List of SchemaType objects or an empty list on failure.
         """
         logging.info("Fetching data types...")
-        response = self._get("schemas/dataTypes")
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch data")
+        raw = self._get("schemas/dataTypes")
+
+        response = self._handle_response(raw, action="get_data_types")
+        if response is None:
             return []
 
         try:
             parsed_response = SchemaResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("Schema Validation Error: %s", e)
+            logging.error("Schema Validation Error: %s; raw=%s", e, response)
             return []
 
     def get_platform_auto_generation_fields(self) -> dict[str, AutoGenField]:
@@ -70,16 +69,19 @@ class SchemaService(BaseService):
             Dictionary mapping field names to AutoGenField metadata.
         """
         logging.info("Fetching platform auto-generation fields...")
-        response = self._get("schemas/systemFields")
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch platform auto-generation fields")
+        raw = self._get("schemas/systemFields")
+
+        response = self._handle_response(
+            raw, action="get_platform_auto_generation_fields"
+        )
+        if response is None:
             return {}
 
         try:
             parsed_response = AutoGenFieldsResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("AutoGenFields Validation Error: %s", e)
+            logging.error("AutoGenFields Validation Error: %s; raw=%s", e, response)
             return {}
 
         # endregion
@@ -91,16 +93,19 @@ class SchemaService(BaseService):
         Returns:
             List of SchemaEntry objects representing the latest schema version.
         """
-        response = self._get("schemas/versions/latest")
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch latest schema versions")
+        raw = self._get("schemas/versions/latest")
+
+        response = self._handle_response(raw, action="get_list_with_latest_version")
+        if response is None:
             return []
 
         try:
             parsed_response = SchemaListResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "SchemaListResponse Validation Error: %s; raw=%s", e, response
+            )
             return []
 
     def get_versions(self) -> list[SchemaVersionEntry]:
@@ -109,16 +114,19 @@ class SchemaService(BaseService):
         Returns:
             List of SchemaVersionEntry records.
         """
-        response = self._get("schemas/versions")
-        if not response or not response.get("success"):
-            # logging.error()
+        raw = self._get("schemas/versions")
+
+        response = self._handle_response(raw, action="get_versions")
+        if response is None:
             return []
 
         try:
             parsed_response = SchemaVersionsResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "SchemaVersionsResponse Validation Error: %s; raw=%s", e, response
+            )
             return []
 
     def get_versions_for_ETId(self, ETId: int) -> list[int]:
@@ -130,22 +138,24 @@ class SchemaService(BaseService):
         Returns:
             List of version numbers.
         """
+        raw = self._get(f"schemas/envelopeTypes/{ETId}/versions")
 
-        response = self._get(f"schemas/envelopeTypes/{ETId}/versions")
-        if not response or not response.get("success"):
-            # logging.error()
+        response = self._handle_response(raw, action="get_versions_for_ETId")
+        if response is None:
             return []
+
         try:
             parsed_response = SchemaListVersionsResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "SchemaListVersionsResponse Validation Error: %s; raw=%s", e, response
+            )
             return []
 
     # endregion
 
     # region Schema UI - Index
-
     def get_indexes(self, ETId: SystemEnvelopeType | int | str) -> list[IndexEntry]:
         """Retrieve index metadata for a given ETId.
 
@@ -161,16 +171,19 @@ class SchemaService(BaseService):
             etid_value = str(ETId)
 
         header = {"ETId": etid_value}
-        response = self._get("schemas/envelopeTypes/15/indexes", header)
+        raw = self._get("schemas/envelopeTypes/15/indexes", header)
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema indexes")
+        response = self._handle_response(raw, action="get_indexes")
+        if response is None:
             return []
+
         try:
             parsed_response = SchemaIndexResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "SchemaIndexResponse Validation Error: %s; raw=%s", e, response
+            )
             return []
 
     def get_indexes_by_table_name(self, tableName: str) -> list[IndexEntry]:
@@ -182,18 +195,21 @@ class SchemaService(BaseService):
         Returns:
             List of IndexEntry objects or empty list on error.
         """
-        response = self._get(
+        raw = self._get(
             f"schemas/envelopeTypes/15/indexesByTableName?tableName={tableName}"
         )
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch indexes by table name")
+
+        response = self._handle_response(raw, action="get_indexes_by_table_name")
+        if response is None:
             return []
 
         try:
             parsed_response = IndexesByTableNameResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "IndexesByTableNameResponse Validation Error: %s; raw=%s", e, response
+            )
             return []
 
     # endregion
@@ -209,15 +225,19 @@ class SchemaService(BaseService):
             SchemaMetadata object if creation is successful, otherwise None.
         """
         headers = {"ETId": "50", "SV": "1"}
-        response = self._post("schemas/", json=request.model_dump(), headers=headers)
-        if not response or not response.get("success"):
-            logging.error("Failed to create schema")
+        raw = self._post("schemas/", json=request.model_dump(), headers=headers)
+
+        response = self._handle_response(raw, action="create_schema")
+        if response is None:
             return None
+
         try:
             parsed_response = CreateSchemaResponse(**response)
             return parsed_response.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "CreateSchemaResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     # endregion
@@ -233,17 +253,19 @@ class SchemaService(BaseService):
             SchemaDetail object or None if not found or invalid.
         """
         headers = {"ETId": f"{ETId}"}
-        response = self._get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
+        raw = self._get(f"schemas/envelopeTypes/{ETId}/details", headers=headers)
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema details")
+        response = self._handle_response(raw, action="get_schema_details_with_ETId")
+        if response is None:
             return None
 
         try:
-            response = GetSchemaDetailResponse(**response)
-            return cast(SchemaDetail, response.data)
+            parsed = GetSchemaDetailResponse(**response)
+            return parsed.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "GetSchemaDetailResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     def get_envelope_types(self) -> list[int] | None:
@@ -252,17 +274,19 @@ class SchemaService(BaseService):
         Returns:
             List of ETId integers or None on failure.
         """
-        response = self._get("schemas/envelopeTypes")
+        raw = self._get("schemas/envelopeTypes")
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema details")
+        response = self._handle_response(raw, action="get_envelope_types")
+        if response is None:
             return None
 
         try:
-            response = GetEnvelopeTypesResponse(**response)
-            return cast(list[int], response.data)
+            parsed = GetEnvelopeTypesResponse(**response)
+            return parsed.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "GetEnvelopeTypesResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     def get_details_by_id(self, Id: str) -> SchemaDetail | None:
@@ -274,17 +298,19 @@ class SchemaService(BaseService):
         Returns:
             SchemaDetail or None.
         """
-        response = self._get(f"schemas/{Id}")
+        raw = self._get(f"schemas/{Id}")
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema details")
+        response = self._handle_response(raw, action="get_details_by_id")
+        if response is None:
             return None
 
         try:
-            response = GetSchemaDetailResponse(**response)
-            return cast(SchemaDetail, response.data)
+            parsed = GetSchemaDetailResponse(**response)
+            return parsed.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "GetSchemaDetailResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     def get_list_schema_items(self) -> list[SchemaItem] | None:
@@ -293,17 +319,19 @@ class SchemaService(BaseService):
         Returns:
             List of SchemaItem objects or None.
         """
-        response = self._get("schemas")
+        raw = self._get("schemas")
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema details")
+        response = self._handle_response(raw, action="get_list_schema_items")
+        if response is None:
             return None
 
         try:
-            response = GetSchemaListResponse(**response)
-            return cast(list[SchemaItem], response.data)
+            parsed = GetSchemaListResponse(**response)
+            return parsed.data
         except ValidationError as e:
-            logging.error("SchemaListResponse Validation Error: %s", e)
+            logging.error(
+                "GetSchemaListResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     def get_schema_query_schema_items(
@@ -317,13 +345,13 @@ class SchemaService(BaseService):
         Returns:
             SchemaQueryList containing data and total count, or None.
         """
-        response = self._get(
+        raw = self._get(
             "schemas/schemaList",
             params=schemaQueryListRequest.model_dump(exclude_none=True),
         )
 
-        if not response or not response.get("success"):
-            logging.error("Failed to fetch schema details")
+        response = self._handle_response(raw, action="get_schema_query_schema_items")
+        if response is None:
             return None
 
         try:
@@ -332,7 +360,9 @@ class SchemaService(BaseService):
             total = parsed_response.total
             return SchemaQueryList(data=data, total=total)
         except ValidationError as e:
-            logging.error("SchemaQueryList Validation Error: %s", e)
+            logging.error(
+                "SchemaQueryListResponse Validation Error: %s; raw=%s", e, response
+            )
             return None
 
     # endregion
