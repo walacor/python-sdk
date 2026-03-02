@@ -1,15 +1,9 @@
-# walacor_sdk/base/exceptions.py
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
 from typing import Any
 
-
-@dataclass
-class WalacorErrorItem:
-    reason: str
-    message: str
+from walacor_sdk.base.exceptions.errors import WalacorErrorItem
 
 
 class WalacorRequestError(RuntimeError):

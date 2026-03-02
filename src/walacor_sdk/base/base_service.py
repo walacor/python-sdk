@@ -1,6 +1,5 @@
 from abc import ABC
 from typing import Any
-from venv import logger
 
 from walacor_sdk.base.exceptions.errors import (
     extract_error_payload,
@@ -10,6 +9,9 @@ from walacor_sdk.base.exceptions.exceptions import WalacorRequestError
 from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.utils.enums import RequestType
 from walacor_sdk.utils.global_exception_handler import global_exception_handler
+from walacor_sdk.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class BaseService(ABC):
@@ -73,18 +75,24 @@ class BaseService(ABC):
             return response
 
         err = extract_error_payload(response)
+
         if err:
             logger.error(
                 "%s failed (code=%s): %s", action, err.code, format_walacor_error(err)
             )
+            code = err.code
+            errors = err.errors
         else:
-            logger.error("%s failed: success=false; raw=%s", action, response)
+            logger.error(
+                "%s failed: success=%r; raw=%s",
+                action,
+                response.get("success"),
+                response,
+            )
+            code = None
+            errors = []
 
         if getattr(self.client, "raise_on_error", False) is True:
-            raise WalacorRequestError(
-                code=getattr(err, "code", None),
-                errors=getattr(err, "errors", None),
-                raw=response,
-            )
+            raise WalacorRequestError(code=code, errors=errors, raw=response)
 
         return None
