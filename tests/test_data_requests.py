@@ -502,7 +502,7 @@ def test_post_complex_query_success(mock_logging, service):
         assert result.Total == 1
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getcomplex",
+            "query/getcomplex?fromSummary=true",
             headers={"ETId": "101"},
             json=[{"match": "criteria"}],
         )
@@ -551,13 +551,13 @@ def test_post_query_api_success(mock_logging, service):
         "walacor_sdk.data_requests.data_requests_service.QueryApiResponse",
         return_value=MagicMock(data=["row1", "row2"]),
     ):
-        result = service.post_query_api(ETId=22, payload={"some": "query"})
+        result = service.post_query_api(ETId=22)
 
         assert result == ["row1", "row2"]
         service._post.assert_called_once_with(
-            "query/get?pageNo=1&pageSize=0",
+            "query/get?pageNo=0&pageSize=0&fromSummary=true",
             headers={"ETId": "22", "SV": "1"},
-            json={"some": "query"},
+            json=None,
         )
         mock_logging.error.assert_not_called()
 
@@ -567,7 +567,7 @@ def test_post_query_api_failure_flag(mock_logging, service):
     """Test post_query_api returns None and logs error when response is unsuccessful."""
     service._post = MagicMock(return_value={"success": False})
 
-    result = service.post_query_api(ETId=7, payload={"bad": "query"})
+    result = service.post_query_api(ETId=7)
 
     assert result is None
     mock_logging.error.assert_called_once_with(
@@ -584,7 +584,7 @@ def test_post_query_api_validation_error(mock_logging, service):
         "walacor_sdk.data_requests.data_requests_service.QueryApiResponse",
         side_effect=ValidationError.from_exception_data("QueryApiResponse", []),
     ):
-        result = service.post_query_api(ETId=5, payload={})
+        result = service.post_query_api(ETId=5)
 
         assert result is None
         mock_logging.error.assert_called()
@@ -613,7 +613,7 @@ def test_post_query_api_aggregate_success(mock_logging, service):
         assert result.Total == 3
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getComplex",
+            "query/getcomplex?fromSummary=true",
             headers={"ETId": "10", "SV": "1", "DV": "1"},
             json={"agg": "test"},
         )
@@ -677,7 +677,9 @@ def test_post_complex_MQL_queries_success(mock_logging, service):
         assert result.Total == 99
         assert isinstance(result.Records, list)
         service._post.assert_called_once_with(
-            "query/getcomplex", headers={"ETId": "77"}, json=[{"stage": "match"}]
+            "query/getcomplex?fromSummary=true",
+            headers={"ETId": "77"},
+            json=[{"stage": "match"}],
         )
         mock_logging.error.assert_not_called()
 
