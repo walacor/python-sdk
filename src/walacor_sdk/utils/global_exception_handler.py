@@ -1,5 +1,4 @@
 import json
-import logging
 
 from collections.abc import Callable
 from functools import wraps
@@ -17,6 +16,9 @@ from walacor_sdk.utils.exceptions import (
     BadRequestError,
     InternalServerError,
 )
+from walacor_sdk.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -28,7 +30,7 @@ def global_exception_handler(func: F) -> F:
             return func(*args, **kwargs)
 
         except (ConnectTimeout, ConnectionError) as conn_err:
-            logging.error("Connection error: %s", conn_err)
+            logger.error("Connection error: %s", conn_err)
             raise APIConnectionError(
                 "Walacor API is unreachable (connection timeout)."
             ) from None
@@ -60,7 +62,7 @@ def global_exception_handler(func: F) -> F:
                     pass
 
                 if status == 400:
-                    logging.error(
+                    logger.error(
                         "HTTP 400 from %s: [%s] %s",
                         func.__name__,
                         error_reason,
@@ -69,7 +71,7 @@ def global_exception_handler(func: F) -> F:
                     raise BadRequestError(error_reason, error_message, status) from None
 
                 if status == 500:
-                    logging.error(
+                    logger.error(
                         "HTTP 500 from %s: [%s] %s",
                         func.__name__,
                         error_reason,
@@ -81,7 +83,7 @@ def global_exception_handler(func: F) -> F:
                         status,
                     ) from None
 
-                logging.error(
+                logger.error(
                     "Unhandled HTTP error: %s %s",
                     status,
                     response.reason,
@@ -90,13 +92,13 @@ def global_exception_handler(func: F) -> F:
                     f"HTTP Error {status}: {response.reason}"
                 ) from None
 
-            logging.error("HTTPError raised without response attached.")
+            logger.error("HTTPError raised without response attached.")
             raise APIConnectionError(
                 "HTTP error occurred with no response attached."
             ) from None
 
         except RequestException as req_err:
-            logging.error("HTTP request failed: %s", req_err)
+            logger.error("HTTP request failed: %s", req_err)
             raise APIConnectionError(
                 "An HTTP error occurred while contacting Walacor API."
             ) from None
@@ -105,7 +107,7 @@ def global_exception_handler(func: F) -> F:
             raise
 
         except Exception as exc:
-            logging.error("Unexpected error: %s", exc)
+            logger.error("Unexpected error: %s", exc)
             raise APIConnectionError(
                 "An unexpected error occurred in the Walacor SDK."
             ) from None

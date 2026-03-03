@@ -14,6 +14,14 @@ import requests
 from pydantic import ValidationError
 
 from walacor_sdk.base.base_service import BaseService
+from walacor_sdk.file_request import (
+    DuplicateData,
+    FileInfo,
+    FileItem,
+    FileMetadata,
+    MemoryFileItem,
+    StoreFileData,
+)
 from walacor_sdk.file_request.models.file_request_request import (
     StoreFileRequest,
     VerifySingleFileRequest,
@@ -22,14 +30,6 @@ from walacor_sdk.file_request.models.file_request_response import (
     ListFilesResponse,
     StoreFileResponse,
     VerifySuccessResponse,
-)
-from walacor_sdk.file_request.models.models import (
-    DuplicateData,
-    FileInfo,
-    FileItem,
-    FileMetadata,
-    MemoryFileItem,
-    StoreFileData,
 )
 from walacor_sdk.utils.exceptions import FileRequestError
 from walacor_sdk.utils.logger import get_logger
@@ -121,12 +121,10 @@ class FileRequestService(BaseService):
         """
         payload = StoreFileRequest(fileInfo=file_info)
         try:
-            response_json = self._post(
-                "v2/files/store", json=payload.model_dump(by_alias=True)
-            )
+            raw = self._post("v2/files/store", json=payload.model_dump(by_alias=True))
 
-            if not response_json or not response_json.get("success"):
-                logger.error("File store request failed")
+            response_json = self._handle_response(raw, action="store")
+            if response_json is None:
                 raise FileRequestError("store failed")
 
             parsed = StoreFileResponse(**response_json)
@@ -222,10 +220,10 @@ class FileRequestService(BaseService):
         headers = {"ETId": "17"}
 
         try:
-            response_json = self._post(query, json=payload, headers=headers)
+            raw = self._post(query, json=payload, headers=headers)
 
-            if not response_json or not response_json.get("success"):
-                logger.error("List files request failed")
+            response_json = self._handle_response(raw, action="list_files")
+            if response_json is None:
                 raise FileRequestError("list files failed")
 
             parsed = ListFilesResponse(**response_json)
@@ -329,7 +327,6 @@ class FileRequestService(BaseService):
     def serialize_dataframe(
         self, df: Any, *, fmt: str = "parquet", name: str | None = None, **kw: Any
     ) -> tuple[BytesIO, str, str]:
-
         buf = BytesIO()
         if fmt == "csv":
             df.to_csv(buf, index=False, **kw)

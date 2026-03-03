@@ -53,16 +53,19 @@ def test_insert_single_record_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_insert_single_record_failure_flag(mock_logging, service):
-    """Test insert_single_record returns None and logs error if success=False in API response."""
     mock_request = {"Data": "test"}
     service._post = MagicMock(return_value={"success": False})
 
     result = service.insert_single_record(mock_request, 123)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to insert record")
+    mock_logging.error.assert_called_once()
+
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "insert_single_record" in rendered
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -130,16 +133,19 @@ def test_insert_multiple_records_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_insert_multiple_records_failure_flag(mock_logging, service):
-    """Test insert_single_record returns None and logs error if success=False in API response."""
-    mock_request = {"test": "test"}
+    mock_request = [{"test": "test"}]
     service._post = MagicMock(return_value={"success": False})
 
-    result = service.insert_single_record(mock_request, 123)
+    result = service.insert_multiple_records(mock_request, 123)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to insert record")
+    mock_logging.error.assert_called_once()
+
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "insert_multiple_records" in rendered
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -194,7 +200,7 @@ def test_update_single_record_with_UID_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_update_single_record_with_UID_failure_flag(mock_logging, service):
     """
     Test update_single_record returns None and logs error if response.success is False.
@@ -204,7 +210,12 @@ def test_update_single_record_with_UID_failure_flag(mock_logging, service):
     result = service.update_single_record_with_UID(record, 123)
 
     assert result is None
-    mock_logging.error.assert_called_with("Failed to update record")
+    mock_logging.error.assert_called_with(
+        "%s failed: success=%r; raw=%s",
+        "update_single_record_with_UID",
+        False,
+        {"success": False},
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -265,7 +276,7 @@ def test_update_multiple_record_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_update_multiple_record_failure_flag(mock_logging, service):
     """
     Test update_multiple_record returns None and logs error if API returns success=False.
@@ -275,7 +286,12 @@ def test_update_multiple_record_failure_flag(mock_logging, service):
     result = service.update_multiple_record(records, 321)
 
     assert result is None
-    mock_logging.error.assert_called_with("Failed to update records")
+    mock_logging.error.assert_called_with(
+        "%s failed: success=%r; raw=%s",
+        "update_multiple_record",
+        False,
+        {"success": False},
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -360,7 +376,7 @@ def test_get_all_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_all_failure_flag(mock_logging, service):
     """Test get_all returns None and logs error when response.success is False."""
     service._post = MagicMock(return_value={"success": False})
@@ -368,7 +384,9 @@ def test_get_all_failure_flag(mock_logging, service):
     result = service.get_all(ETId=123)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch all records")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s", "get_all", False, {"success": False}
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -431,7 +449,7 @@ def test_get_single_record_by_record_id_success(mock_logging, service):
     mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_get_single_record_by_record_id_failure_flag(mock_logging, service):
     """Test get_single_record_by_record_id returns None and logs error on failed response."""
     service._post = MagicMock(return_value={"success": False})
@@ -439,7 +457,12 @@ def test_get_single_record_by_record_id_failure_flag(mock_logging, service):
     result = service.get_single_record_by_record_id("au321", 42)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch single record")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s",
+        "get_single_record_by_record_id",
+        False,
+        {"success": False},
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -486,7 +509,7 @@ def test_post_complex_query_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_post_complex_query_failure_flag(mock_logging, service):
     """Test post_complex_query returns None and logs error when API fails."""
     service._post = MagicMock(return_value={"success": False})
@@ -494,7 +517,9 @@ def test_post_complex_query_failure_flag(mock_logging, service):
     result = service.post_complex_query(ETId=5, pipeline=[])
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch complex query results")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s", "post_complex_query", False, {"success": False}
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -537,7 +562,7 @@ def test_post_query_api_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_post_query_api_failure_flag(mock_logging, service):
     """Test post_query_api returns None and logs error when response is unsuccessful."""
     service._post = MagicMock(return_value={"success": False})
@@ -545,7 +570,9 @@ def test_post_query_api_failure_flag(mock_logging, service):
     result = service.post_query_api(ETId=7)
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch query results")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s", "post_query_api", False, {"success": False}
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -593,7 +620,7 @@ def test_post_query_api_aggregate_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_post_query_api_aggregate_failure_flag(mock_logging, service):
     """Test post_query_api_aggregate returns None and logs error when API fails."""
     service._post = MagicMock(return_value={"success": False})
@@ -601,7 +628,12 @@ def test_post_query_api_aggregate_failure_flag(mock_logging, service):
     result = service.post_query_api_aggregate(payload={})
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch aggregate results")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s",
+        "post_query_api_aggregate",
+        False,
+        {"success": False},
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
@@ -652,7 +684,7 @@ def test_post_complex_MQL_queries_success(mock_logging, service):
         mock_logging.error.assert_not_called()
 
 
-@patch("walacor_sdk.data_requests.data_requests_service.logger")
+@patch("walacor_sdk.base.base_service.logger")
 def test_post_complex_MQL_queries_failure_flag(mock_logging, service):
     """Test post_complex_MQL_queries logs and returns None on failure."""
     service._post = MagicMock(return_value={"success": False})
@@ -660,7 +692,12 @@ def test_post_complex_MQL_queries_failure_flag(mock_logging, service):
     result = service.post_complex_MQL_queries(ETId=7, pipeline=[])
 
     assert result is None
-    mock_logging.error.assert_called_once_with("Failed to fetch MQL query results")
+    mock_logging.error.assert_called_once_with(
+        "%s failed: success=%r; raw=%s",
+        "post_complex_MQL_queries",
+        False,
+        {"success": False},
+    )
 
 
 @patch("walacor_sdk.data_requests.data_requests_service.logger")
