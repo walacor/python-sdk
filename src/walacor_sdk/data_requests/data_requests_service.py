@@ -257,9 +257,8 @@ class DataRequestsService(BaseService):
         """
         header = {"ETId": str(ETId)}
         query = f"query/getcomplex?fromSummary={'true' if fromSummary else 'false'}"
-        response = self._post(query, headers=header, json=pipeline)
+        raw = self._post(query, headers=header, json=pipeline)
 
-        raw = self._post("query/getcomplex", headers=header, json=pipeline)
         response = self._handle_response(raw, action="post_complex_query")
         if response is None:
             return None
@@ -295,9 +294,8 @@ class DataRequestsService(BaseService):
         """
         headers = {"ETId": str(ETId), "SV": str(schemaVersion)}
         query = f"query/get?pageNo={pageNumber}&pageSize={pageSize}&fromSummary={'true' if fromSummary else 'false'}"
-        response = self._post(query, headers=headers, json=payload)
-
         raw = self._post(query, headers=headers, json=payload)
+
         response = self._handle_response(raw, action="post_query_api")
         if response is None:
             return None
@@ -335,9 +333,10 @@ class DataRequestsService(BaseService):
             "DV": str(dataVersion),
         }
         query = f"query/getcomplex?fromSummary={'true' if fromSummary else 'false'}"
-        response = self._post(query, headers=headers, json=payload)
+        raw = self._post(query, headers=headers, json=payload)
 
-        if not response or not response.get("success"):
+        response = self._handle_response(raw, action="post_query_api_aggregate")
+        if response is None:
             logger.error("Failed to fetch aggregate results")
             return None
 
@@ -368,10 +367,8 @@ class DataRequestsService(BaseService):
 
         header = {"ETId": str(ETId)}
         query = f"query/getcomplex?fromSummary={'true' if fromSummary else 'false'}"
+        raw = self._post(query, headers=header, json=pipeline)
 
-        response = self._post(query, headers=header, json=pipeline)
-
-        raw = self._post("query/getcomplex", headers=header, json=pipeline)
         response = self._handle_response(raw, action="post_complex_MQL_queries")
         if response is None:
             return None
