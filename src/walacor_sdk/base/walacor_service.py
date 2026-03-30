@@ -4,6 +4,7 @@ from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.data_requests.data_requests_service import DataRequestsService
 from walacor_sdk.file_request.file_request_service import FileRequestService
 from walacor_sdk.schema.schema_service import SchemaService
+from walacor_sdk.wea.wea_service import WeaService
 
 
 class WalacorService:
@@ -74,3 +75,10 @@ class WalacorService:
         if not self._facade:
             raise ValueError("Service not set up. Call setup() first.")
         return self._facade.data_requests
+
+    @property
+    def wea(self) -> WeaService:
+        """Expose WeaService under WalacorService.wea"""
+        if not self._facade:
+            raise ValueError("Service not set up. Call setup() first.")
+        return self._facade.wea
