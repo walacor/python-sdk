@@ -26,7 +26,7 @@ class BlockInfoByHeight(BaseModel):
 
 class TransactionSummary(BaseModel):
     TransId: str
-    EID: str
+    EId: str
     ETId: int
 
 
