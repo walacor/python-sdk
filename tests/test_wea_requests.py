@@ -262,12 +262,12 @@ def test_get_block_transaction_by_range_success(mock_logging, service):
                     "transactions": [
                         {
                             "TransId": "tx1",
-                            "EID": "eid1",
+                            "EId": "eid1",
                             "ETId": 10,
                         },
                         {
                             "TransId": "tx2",
-                            "EID": "eid2",
+                            "EId": "eid2",
                             "ETId": 11,
                         },
                     ],
@@ -279,7 +279,7 @@ def test_get_block_transaction_by_range_success(mock_logging, service):
                     "transactions": [
                         {
                             "TransId": "tx3",
-                            "EID": "eid3",
+                            "EId": "eid3",
                             "ETId": 12,
                         }
                     ],
