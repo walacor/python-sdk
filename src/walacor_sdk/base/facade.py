@@ -1,6 +1,7 @@
 from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.data_requests.data_requests_service import DataRequestsService
+from walacor_sdk.envelope.envelope_service import EnvelopeService
 from walacor_sdk.file_request.file_request_service import FileRequestService
 from walacor_sdk.schema.schema_service import SchemaService
 from walacor_sdk.wea.wea_service import WeaService
@@ -15,6 +16,7 @@ class Facade:
         file_request_service_cls: type[FileRequestService] = FileRequestService,
         data_requests_service_cls: type[DataRequestsService] = DataRequestsService,
         wea_service_cls: type[WeaService] = WeaService,
+        envelope_service_cls: type[EnvelopeService] = EnvelopeService,
     ) -> None:
         self._client: W_Client = client
 
@@ -22,6 +24,7 @@ class Facade:
         self._schema: SchemaService | None = None
         self._file_request: FileRequestService | None = None
         self._wea: WeaService | None = None
+        self._envelope: EnvelopeService | None = None
 
         self.auth_service_cls: type[AuthService] = auth_service_cls
         self.schema_service_cls: type[SchemaService] = schema_service_cls
@@ -29,6 +32,7 @@ class Facade:
             file_request_service_cls
         )
         self.wea_service_cls: type[WeaService] = wea_service_cls
+        self.envelope_service_cls: type[EnvelopeService] = envelope_service_cls
 
         self._data_requests: DataRequestsService | None = None
         self.data_requests_service_cls: type[DataRequestsService] = (
@@ -58,6 +62,12 @@ class Facade:
         if self._data_requests is None:
             self._data_requests = self.data_requests_service_cls(self._client)
         return self._data_requests
+
+    @property
+    def envelope(self) -> EnvelopeService:
+        if self._envelope is None:
+            self._envelope = self.envelope_service_cls(self._client)
+        return self._envelope
 
     @property
     def wea(self) -> WeaService:

@@ -2,6 +2,7 @@ from walacor_sdk.authentication.auth_service import AuthService
 from walacor_sdk.base.facade import Facade
 from walacor_sdk.base.w_client import W_Client
 from walacor_sdk.data_requests.data_requests_service import DataRequestsService
+from walacor_sdk.envelope.envelope_service import EnvelopeService
 from walacor_sdk.file_request.file_request_service import FileRequestService
 from walacor_sdk.schema.schema_service import SchemaService
 from walacor_sdk.wea.wea_service import WeaService
@@ -82,3 +83,10 @@ class WalacorService:
         if not self._facade:
             raise ValueError("Service not set up. Call setup() first.")
         return self._facade.wea
+
+    @property
+    def envelope(self) -> EnvelopeService:
+        """Expose EnvelopeService under WalacorService.envelope"""
+        if not self._facade:
+            raise ValueError("Service not set up. Call setup() first.")
+        return self._facade.envelope
