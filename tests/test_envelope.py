@@ -49,7 +49,7 @@ def test_get_replay_history_success(mock_logging, service):
 
     service._post.assert_called_once_with(
         "envelopes/history/replay",
-        headers={"ETId": "44556677", "SV": "1"},
+        headers={"ETId": "44556677"},
         json={
             "UID": "8d68852c-0475-408a-9e8b-73b739d857e2",
             "EId": "1aac5015-8f0d-4626-96ae-95792405b572",
@@ -80,7 +80,7 @@ def test_get_replay_history_with_org_id(mock_logging, service):
 
     service._post.assert_called_once_with(
         "envelopes/history/replay?ORGId=org-1",
-        headers={"ETId": "123456", "SV": "1"},
+        headers={"ETId": "123456"},
         json={"UID": "test-uid"},
     )
     mock_logging.error.assert_not_called()
@@ -130,7 +130,7 @@ def test_get_replay_history_detailed_success(mock_logging, service):
 
     service._post.assert_called_once_with(
         "envelopes/history/replay?detailed=true",
-        headers={"ETId": "44556677", "SV": "1"},
+        headers={"ETId": "44556677"},
         json={
             "UID": "8d68852c-0475-408a-9e8b-73b739d857e2",
             "EId": "1aac5015-8f0d-4626-96ae-95792405b572",
@@ -164,7 +164,7 @@ def test_get_replay_history_detailed_with_org_id(mock_logging, service):
 
     service._post.assert_called_once_with(
         "envelopes/history/replay?detailed=true&ORGId=org-1",
-        headers={"ETId": "123456", "SV": "1"},
+        headers={"ETId": "123456"},
         json={"UID": "test-uid"},
     )
     mock_logging.error.assert_not_called()

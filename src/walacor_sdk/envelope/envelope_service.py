@@ -26,7 +26,7 @@ class EnvelopeService(BaseService):
         EId: str | None = None,
         updated_at: int | None = None,
         detailed: bool = False,
-        schemaVersion: int = 1,
+        schemaVersion: int | None = None,
         org_id: str | None = None,
     ) -> dict[str, Any] | None:
         if not isinstance(UID, str) or UID.strip() == "":
@@ -45,8 +45,10 @@ class EnvelopeService(BaseService):
 
         headers: dict[str, str] = {
             "ETId": str(ETId),
-            "SV": str(schemaVersion),
         }
+
+        if schemaVersion is not None:
+            headers["SV"] = str(schemaVersion)
 
         payload: dict[str, Any] = {
             "UID": UID.strip(),
@@ -77,7 +79,7 @@ class EnvelopeService(BaseService):
         ETId: int,
         EId: str | None = None,
         updated_at: int | None = None,
-        schemaVersion: int = 1,
+        schemaVersion: int | None = None,
         org_id: str | None = None,
     ) -> dict[str, object] | None:
         logger.info("Fetching replay history for UID=%s", UID)
@@ -111,7 +113,7 @@ class EnvelopeService(BaseService):
         ETId: int,
         EId: str | None = None,
         updated_at: int | None = None,
-        schemaVersion: int = 1,
+        schemaVersion: int | None = None,
         org_id: str | None = None,
     ) -> ReplayHistoryDetailed | None:
         logger.info("Fetching detailed replay history for UID=%s", UID)
