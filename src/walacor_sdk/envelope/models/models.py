@@ -4,11 +4,9 @@ from pydantic import BaseModel
 
 
 class ReplayHistoryPagination(BaseModel):
-    pageNo: int | None = None
-    pageNumber: int | None = None  # backward-compatible fallback
+    pageNo: int
     pageSize: int
     total: int
-    totalPage: int | None = None
 
     @property
     def current_page(self) -> int:

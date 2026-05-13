@@ -380,7 +380,6 @@ def test_get_replay_history_detailed_success(mock_logging, service):
     assert result.pagination.pageNo == 0
     assert result.pagination.pageSize == 10
     assert result.pagination.total == 2
-    assert result.pagination.totalPage == 1
 
     service._post.assert_called_once_with(
         "envelopes/history/replay/detailed",
@@ -425,7 +424,6 @@ def test_get_replay_history_detailed_with_org_id_and_pagination(mock_logging, se
     assert result.pagination.pageNo == 1
     assert result.pagination.pageSize == 20
     assert result.pagination.total == 21
-    assert result.pagination.totalPage == 2
 
     service._post.assert_called_once_with(
         "envelopes/history/replay/detailed?ORGId=org-1&pageNo=1&pageSize=20",
