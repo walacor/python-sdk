@@ -1,16 +1,19 @@
 from typing import Any
 
-from pydantic import Field
-
 from walacor_sdk.base.model.base_response_model import BaseResponse
-from walacor_sdk.envelope.models.models import (
-    ReplayHistoryDetailed,
-)
+from walacor_sdk.envelope.models.models import ReplayHistoryDetailed
 
 
 class GetReplayHistoryResponse(BaseResponse[dict[str, Any] | None]):
-    Total: int = Field(..., alias="total")
+    pass
 
 
 class GetReplayHistoryDetailedResponse(BaseResponse[ReplayHistoryDetailed]):
-    Total: int = Field(..., alias="total")
+    pass
+
+
+class PostEnvelopeQueryResponse(BaseResponse[list[dict[str, Any]]]):
+    total: int | None = None
+    pageNo: int | None = None
+    pageSize: int | None = None
+    totalPage: int | None = None

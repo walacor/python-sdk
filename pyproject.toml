@@ -17,6 +17,7 @@ keywords = [
 ]
 license = { text = "Apache-2.0" }
 authors = [
+  { name = "Walacor", email = "captrus@walacor.com" },
   { name = "Garo Kechichian", email = "garo.keshish@gmail.com" },
 ]
 requires-python = ">=3.11"
@@ -35,7 +36,6 @@ dynamic = [
 dependencies = [
   "requests>=2.32.3",
   "pydantic>=2.10",
-
 ]
 
 [project.optional-dependencies]
