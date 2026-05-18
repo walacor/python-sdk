@@ -221,7 +221,7 @@ class SchemaSummary(BaseModel):
     schema_name: str = Field(..., alias="schema")
     ETId: int
     createdDate: int
-    Family: str
+    Family: str | None = None
     SV: int
     numberOfFields: int
 
