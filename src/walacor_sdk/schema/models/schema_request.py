@@ -13,9 +13,9 @@ class CreateSchemaRequest(BaseModel):
 
 
 class SchemaQueryListRequest(BaseModel):
-    page: int = Field(default=1, ge=1)
-    pageSize: int = Field(default=10, ge=1)
+    page: int = Field(default=0, ge=0)
+    pageSize: int = Field(default=10, ge=0)
     order: Literal["asc", "desc"] = "desc"
     orderBy: str = "Family"
-    startDate: dt | None
-    endDate: dt | None
+    startDate: dt | None = None
+    endDate: dt | None = None
