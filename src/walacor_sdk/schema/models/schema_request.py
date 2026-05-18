@@ -17,5 +17,5 @@ class SchemaQueryListRequest(BaseModel):
     pageSize: int = Field(default=10, ge=1)
     order: Literal["asc", "desc"] = "desc"
     orderBy: str = "Family"
-    startDate: dt
-    endDate: dt
+    startDate: dt | None
+    endDate: dt | None
