@@ -276,3 +276,53 @@ class EnvelopeService(BaseService):
                 response,
             )
             return None
+
+    def get_replay_history_up_to_updated_at(
+        self,
+        UID: str,
+        ETId: int,
+        updated_at: int,
+        schemaVersion: int | None = None,
+        org_id: str | None = None,
+    ) -> dict[str, Any] | None:
+        logger.info(
+            "Fetching replay history up to updated_at for UID=%s updated_at=%s",
+            UID,
+            updated_at,
+        )
+
+        headers = self._build_replay_headers(
+            ETId=ETId,
+            schemaVersion=schemaVersion,
+        )
+
+        payload = self._build_replay_payload(
+            UID=UID,
+            updated_at=updated_at,
+        )
+
+        if payload is None:
+            return None
+
+        endpoint = "envelopes/history/replay/upToUpdatedAt"
+        endpoint += self._build_query_params(org_id=org_id)
+
+        raw = self._post(endpoint, headers=headers, json=payload)
+        response = self._handle_response(
+            raw,
+            action="get_replay_history_up_to_updated_at",
+        )
+
+        if response is None:
+            return None
+
+        try:
+            parsed = GetReplayHistoryResponse(**response)
+            return parsed.data
+        except ValidationError as e:
+            logger.error(
+                "GetReplayHistoryResponse Validation Error: %s; raw=%s",
+                e,
+                response,
+            )
+            return None

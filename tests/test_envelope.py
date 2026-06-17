@@ -659,3 +659,147 @@ def test_get_replay_history_detailed_validation_error(mock_logging, service):
         "GetReplayHistoryDetailedResponse Validation Error"
         in mock_logging.error.call_args[0][0]
     )
+
+
+@patch("walacor_sdk.envelope.envelope_service.logger")
+def test_get_replay_history_up_to_updated_at_success(mock_logging, service):
+    mock_response = {
+        "success": True,
+        "data": {
+            "_id": "69dd0c7ec76f65c480761675",
+            "pub_id": "1",
+            "pub_name": "Updated 3",
+            "UID": "8d68852c-0475-408a-9e8b-73b739d857e2",
+            "UpdatedAt": 1776094334506,
+            "EId": "1aac5015-8f0d-4626-96ae-95792405b572",
+            "SV": 2,
+        },
+    }
+
+    service._post = MagicMock(return_value=mock_response)
+
+    result = service.get_replay_history_up_to_updated_at(
+        UID="8d68852c-0475-408a-9e8b-73b739d857e2",
+        ETId=44556677,
+        updated_at=1776094334506,
+    )
+
+    assert isinstance(result, dict)
+    assert result["UID"] == "8d68852c-0475-408a-9e8b-73b739d857e2"
+    assert result["UpdatedAt"] == 1776094334506
+
+    service._post.assert_called_once_with(
+        "envelopes/history/replay/upToUpdatedAt",
+        headers={"ETId": "44556677"},
+        json={
+            "UID": "8d68852c-0475-408a-9e8b-73b739d857e2",
+            "updated_at": 1776094334506,
+        },
+    )
+    mock_logging.error.assert_not_called()
+
+
+@patch("walacor_sdk.envelope.envelope_service.logger")
+def test_get_replay_history_up_to_updated_at_invalid_uid(mock_logging, service):
+    service._post = MagicMock()
+
+    result = service.get_replay_history_up_to_updated_at(
+        UID="   ",
+        ETId=44556677,
+        updated_at=1776094334506,
+    )
+
+    assert result is None
+    service._post.assert_not_called()
+    mock_logging.error.assert_called_once_with("UID must be a non-empty string")
+
+
+@patch("walacor_sdk.envelope.envelope_service.logger")
+def test_get_replay_history_up_to_updated_at_invalid_updated_at(
+    mock_logging,
+    service,
+):
+    service._post = MagicMock()
+
+    result = service.get_replay_history_up_to_updated_at(
+        UID="valid-uid",
+        ETId=44556677,
+        updated_at="1776094334506",
+    )
+
+    assert result is None
+    service._post.assert_not_called()
+    mock_logging.error.assert_called_once_with(
+        "updated_at must be an integer timestamp when provided"
+    )
+
+
+@patch("walacor_sdk.envelope.envelope_service.logger")
+def test_get_replay_history_up_to_updated_at_invalid_updated_at_bool(
+    mock_logging,
+    service,
+):
+    service._post = MagicMock()
+
+    result = service.get_replay_history_up_to_updated_at(
+        UID="valid-uid",
+        ETId=44556677,
+        updated_at=True,
+    )
+
+    assert result is None
+    service._post.assert_not_called()
+    mock_logging.error.assert_called_once_with(
+        "updated_at must be an integer timestamp when provided"
+    )
+
+
+@patch("walacor_sdk.base.base_service.logger")
+def test_get_replay_history_up_to_updated_at_failure_flag(mock_logging, service):
+    service._post = MagicMock(return_value={"success": False})
+
+    result = service.get_replay_history_up_to_updated_at(
+        UID="valid-uid",
+        ETId=44556677,
+        updated_at=1776094334506,
+    )
+
+    assert result is None
+    mock_logging.error.assert_called_once()
+
+    fmt, *args = mock_logging.error.call_args[0]
+    rendered = fmt % tuple(args)
+    assert "get_replay_history_up_to_updated_at" in rendered
+
+
+@patch("walacor_sdk.envelope.envelope_service.logger")
+def test_get_replay_history_up_to_updated_at_validation_error(
+    mock_logging,
+    service,
+):
+    bad_response = {
+        "success": True,
+        "data": ["not-a-dict"],
+    }
+
+    service._post = MagicMock(return_value=bad_response)
+
+    with patch(
+        "walacor_sdk.envelope.envelope_service.GetReplayHistoryResponse",
+        side_effect=ValidationError.from_exception_data(
+            "GetReplayHistoryResponse",
+            [],
+        ),
+    ):
+        result = service.get_replay_history_up_to_updated_at(
+            UID="valid-uid",
+            ETId=44556677,
+            updated_at=1776094334506,
+        )
+
+    assert result is None
+    mock_logging.error.assert_called()
+    assert (
+        "GetReplayHistoryResponse Validation Error"
+        in mock_logging.error.call_args[0][0]
+    )
